@@ -5,6 +5,10 @@ import torch
 from .models.llama.configuration_llama import LlamaConfig
 from .models.llama.modeling_llama import LlamaForCausalLM
 
+LEN_SEQUENCE = 256
+# TODO: make batch size config
+batch_size = 2
+
 
 def describe_model(net):
     print(net)
@@ -14,12 +18,11 @@ def describe_model(net):
         for s in list(p.size()):
             nn = nn * s
         cnt_params += nn
-    print("cnt params:", cnt_params)
+    print(f"cnt params: {cnt_params} ({cnt_params/10**9:0.2F}B)")
 
 
 def get_train_data(config):
-    batch_size = 2
-    data = torch.randint(low=0, high=config.vocab_size, size=(batch_size, 256))
+    data = torch.randint(low=0, high=config.vocab_size, size=(batch_size, LEN_SEQUENCE))
     # TODO: add labels, wrap in named tuple
     return data
 
@@ -32,11 +35,16 @@ def train(net, config):
     # TODO: so far this is inference
     time_start = timer()
     for i in range(cnt_batches):
-        res = net(data)
+        batch = {"input_ids": data, "labels": data}
+        res = net(**batch)
     time_end = timer()
     print(res.logits.shape)
+    print(res.loss)
     elapsed_time = time_end - time_start
+    cnt_tokens = LEN_SEQUENCE * cnt_batches * batch_size
+    tokens_per_scond = cnt_tokens / elapsed_time
     print("done in", elapsed_time)
+    print("tokens per second", tokens_per_scond)
 
 
 def main():
