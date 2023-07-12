@@ -19,10 +19,10 @@ import torch
 from packaging import version
 from torch import Tensor, nn
 
-from .utils import logging
+import logging
 
 
-logger = logging.get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class PytorchGELUTanh(nn.Module):

@@ -17,6 +17,7 @@ Import utilities: Utilities related to imports and our lazy inits.
 
 import importlib.util
 import json
+import logging
 import os
 import shutil
 import subprocess
@@ -30,11 +31,9 @@ from typing import Any, Tuple, Union
 
 from packaging import version
 
-from . import logging
 from .versions import importlib_metadata
 
-
-logger = logging.get_logger(__name__)  # pylint: disable=invalid-name
+logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 
 
 # TODO: This doesn't work for all packages (`bs4`, `faiss`, etc.) Talk to Sylvain to see how to do with it better.

@@ -22,15 +22,15 @@ from typing import Any, Dict, Union
 
 from packaging import version
 
-from ..utils import is_torch_available, logging
+from ..utils import is_torch_available
 from ..utils.import_utils import importlib_metadata
-
+import logging
 
 if is_torch_available():
     import torch
 
 
-logger = logging.get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 @dataclass

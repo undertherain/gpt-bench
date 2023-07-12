@@ -19,12 +19,12 @@ from packaging import version
 from safetensors.torch import storage_ptr, storage_size
 from torch import nn
 
-from .utils import logging
+import logging
 
 
 ALL_LAYERNORM_LAYERS = [nn.LayerNorm]
 
-logger = logging.get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 parsed_torch_version_base = version.parse(version.parse(torch.__version__).base_version)
 
