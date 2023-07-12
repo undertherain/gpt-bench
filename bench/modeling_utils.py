@@ -35,7 +35,7 @@ from .pytorch_utils import (Conv1D, apply_chunking_to_forward,  # noqa: F401
                             find_pruneable_heads_and_indices,
                             id_tensor_storage, prune_conv1d_layer, prune_layer,
                             prune_linear_layer)
-from .utils import ModelOutput, replace_return_docstrings
+from .utils import ModelOutput  # , replace_return_docstrings
 from .utils.import_utils import (ENV_VARS_TRUE_VALUES, importlib_metadata,
                                  is_sagemaker_mp_enabled)
 from .utils.quantization_config import BitsAndBytesConfig
@@ -3648,7 +3648,7 @@ class SQuADHead(nn.Module):
         self.end_logits = PoolerEndLogits(config)
         self.answer_class = PoolerAnswerClass(config)
 
-    @replace_return_docstrings(output_type=SquadHeadOutput, config_class=PretrainedConfig)
+    # @replace_return_docstrings(output_type=SquadHeadOutput, config_class=PretrainedConfig)
     def forward(
         self,
         hidden_states: torch.FloatTensor,

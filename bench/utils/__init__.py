@@ -18,9 +18,9 @@
 from packaging import version
 
 from .. import __version__
-from .doc import (add_code_sample_docstrings, add_end_docstrings,
-                  add_start_docstrings, add_start_docstrings_to_model_forward,
-                  copy_func, replace_return_docstrings)
+# from .doc import (add_code_sample_docstrings, add_end_docstrings,
+#                   add_start_docstrings, add_start_docstrings_to_model_forward,
+#                   copy_func, replace_return_docstrings)
 from .generic import (ContextManagers, ExplicitEnum, ModelOutput,
                       PaddingStrategy, TensorType, add_model_info_to_auto_map,
                       cached_property, can_return_loss, expand_dims,
