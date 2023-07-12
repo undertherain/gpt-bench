@@ -39,7 +39,7 @@ def train(net, config):
         res = net(**batch)
     time_end = timer()
     print(res.logits.shape)
-    print(res.loss)
+    print("loss:", res.loss.item())
     elapsed_time = time_end - time_start
     cnt_tokens = LEN_SEQUENCE * cnt_batches * batch_size
     tokens_per_scond = cnt_tokens / elapsed_time
