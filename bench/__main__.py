@@ -31,7 +31,7 @@ def train(net, config):
     data = get_train_data(config)
     # TODO: do preheat
     # TODO: specify cnt repeats so that at least N samples are seen
-    cnt_batches = 10
+    cnt_batches = 1
     # TODO: so far this is inference
     param_optimizer = [param for param in net.named_parameters() if param[1].requires_grad]
     params_without_weight_decay = ["bias", "gamma", "beta", "LayerNorm", "layer_norm"]
