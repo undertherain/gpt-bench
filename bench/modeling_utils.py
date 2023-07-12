@@ -15,6 +15,7 @@
 # limitations under the License.
 import collections
 import json
+import logging
 import os
 import re
 import warnings
@@ -30,22 +31,22 @@ from torch.nn import CrossEntropyLoss, Identity
 
 from .activations import get_activation
 from .configuration_utils import PretrainedConfig
-from .dynamic_module_utils import custom_object_save
+# from .dynamic_module_utils import custom_object_save
 # from .generation import GenerationConfig, GenerationMixin
 from .pytorch_utils import (Conv1D, apply_chunking_to_forward,  # noqa: F401
                             find_pruneable_heads_and_indices,
                             id_tensor_storage, prune_conv1d_layer, prune_layer,
                             prune_linear_layer)
-from .utils import (DUMMY_INPUTS, FLAX_WEIGHTS_NAME, SAFE_WEIGHTS_INDEX_NAME,
-                    SAFE_WEIGHTS_NAME, TF2_WEIGHTS_NAME, TF_WEIGHTS_NAME,
-                    WEIGHTS_INDEX_NAME, WEIGHTS_NAME, ContextManagers,
-                    ModelOutput, PushToHubMixin, cached_file, copy_func,
-                    download_url, has_file, is_accelerate_available,
-                    is_bitsandbytes_available, is_offline_mode,
-                    is_optimum_available, is_remote_url,
-                    is_safetensors_available, is_torch_tpu_available, logging,
-                    replace_return_docstrings)
-# from .utils.hub import convert_file_size_to_int, get_checkpoint_shard_files
+# from .utils import (DUMMY_INPUTS, FLAX_WEIGHTS_NAME, SAFE_WEIGHTS_INDEX_NAME,
+#                     SAFE_WEIGHTS_NAME, TF2_WEIGHTS_NAME, TF_WEIGHTS_NAME,
+#                     WEIGHTS_INDEX_NAME, WEIGHTS_NAME, ContextManagers,
+#                     ModelOutput, cached_file, copy_func, download_url,
+#                     has_file, is_accelerate_available,
+#                     is_bitsandbytes_available, is_offline_mode,
+#                     is_optimum_available, is_remote_url,
+#                     is_safetensors_available, is_torch_tpu_available, logging,
+#                     replace_return_docstrings)
+from .utils import ModelOutput, replace_return_docstrings
 from .utils.import_utils import (ENV_VARS_TRUE_VALUES, importlib_metadata,
                                  is_sagemaker_mp_enabled)
 from .utils.quantization_config import BitsAndBytesConfig
@@ -71,12 +72,7 @@ XLA_DOWNCAST_BF16 = os.environ.get("XLA_DOWNCAST_BF16", "0").upper()
 #         set_module_tensor_to_device,
 #     )
 
-if is_safetensors_available():
-    from safetensors import safe_open
-    from safetensors.torch import load_file as safe_load_file
-    from safetensors.torch import save_file as safe_save_file
-
-logger = logging.get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 _init_weights = True
@@ -249,7 +245,7 @@ def dtype_byte_size(dtype):
 
 
 def shard_checkpoint(
-    state_dict: Dict[str, torch.Tensor], max_shard_size: Union[int, str] = "10GB", weights_name: str = WEIGHTS_NAME
+    state_dict: Dict[str, torch.Tensor], max_shard_size: Union[int, str] = "10GB", weights_name: str = "WEIGHTS_NAME"
 ):
     """
     Splits a model state dictionary in sub-checkpoints so that the final size of each sub-checkpoint does not exceed a
@@ -997,7 +993,7 @@ class ModuleUtilsMixin:
         return 6 * self.estimate_tokens(input_dict) * self.num_parameters(exclude_embeddings=exclude_embeddings)
 
 
-class PreTrainedModel(nn.Module, ModuleUtilsMixin, PushToHubMixin):
+class PreTrainedModel(nn.Module, ModuleUtilsMixin):
     r"""
     Base class for all models.
 
@@ -3439,11 +3435,11 @@ class PreTrainedModel(nn.Module, ModuleUtilsMixin, PushToHubMixin):
         return BetterTransformer.reverse(self)
 
 
-PreTrainedModel.push_to_hub = copy_func(PreTrainedModel.push_to_hub)
-if PreTrainedModel.push_to_hub.__doc__ is not None:
-    PreTrainedModel.push_to_hub.__doc__ = PreTrainedModel.push_to_hub.__doc__.format(
-        object="model", object_class="AutoModel", object_files="model file"
-    )
+#PreTrainedModel.push_to_hub = copy_func(PreTrainedModel.push_to_hub)
+# if PreTrainedModel.push_to_hub.__doc__ is not None:
+#     PreTrainedModel.push_to_hub.__doc__ = PreTrainedModel.push_to_hub.__doc__.format(
+#         object="model", object_class="AutoModel", object_files="model file"
+#     )
 
 
 class PoolerStartLogits(nn.Module):
