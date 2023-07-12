@@ -33,13 +33,39 @@ def train(net, config):
     # TODO: specify cnt repeats so that at least N samples are seen
     cnt_batches = 10
     # TODO: so far this is inference
+    param_optimizer = [param for param in net.named_parameters() if param[1].requires_grad]
+    params_without_weight_decay = ["bias", "gamma", "beta", "LayerNorm", "layer_norm"]
+    optimizer_grouped_parameters = [
+        {
+            "params": [
+                p for n, p in param_optimizer if not any(nd in n for nd in params_without_weight_decay)
+            ],
+            "weight_decay": 0.01,
+        },
+        {
+            "params": [
+                p for n, p in param_optimizer if any(nd in n for nd in params_without_weight_decay)
+            ],
+            "weight_decay": 0.0,
+        },
+    ]
+    optimizer = torch.optim.AdamW(
+        optimizer_grouped_parameters,
+        lr=0.0001,
+        eps=1e-06,
+        weight_decay=0.01,
+        betas=(0.9, 0.999))
     time_start = timer()
     for i in range(cnt_batches):
+        net.zero_grad()
         batch = {"input_ids": data, "labels": data}
         res = net(**batch)
+        loss = res.loss
+        loss.backward()
+        optimizer.step()
     time_end = timer()
     print(res.logits.shape)
-    print("loss:", res.loss.item())
+    # print("loss:", res.loss.item()  )
     elapsed_time = time_end - time_start
     cnt_tokens = LEN_SEQUENCE * cnt_batches * batch_size
     tokens_per_scond = cnt_tokens / elapsed_time
