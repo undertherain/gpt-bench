@@ -8,6 +8,7 @@ from .models.llama.modeling_llama import LlamaForCausalLM
 LEN_SEQUENCE = 256
 # TODO: make batch size config
 batch_size = 2
+device = "cuda"
 
 
 def describe_model(net):
@@ -24,7 +25,7 @@ def describe_model(net):
 def get_train_data(config):
     data = torch.randint(low=0, high=config.vocab_size, size=(batch_size, LEN_SEQUENCE))
     # TODO: add labels, wrap in named tuple
-    return data
+    return data.to(device)
 
 
 def train(net, config):
@@ -82,6 +83,7 @@ def main():
     # TODO: create configs for testing and production runs
     print(config)
     net = LlamaForCausalLM(config)
+    net.to(device)
     describe_model(net)
     # TODO: configure device
     train(net, config)
