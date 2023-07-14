@@ -1,1 +1,1 @@
-python3 -m bench
+python3 -m bench --batch-size=2

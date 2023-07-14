@@ -1,3 +1,4 @@
+import argparse
 from timeit import default_timer as timer
 
 import torch
@@ -7,7 +8,6 @@ from .models.llama.modeling_llama import LlamaForCausalLM
 
 LEN_SEQUENCE = 256
 # TODO: make batch size config
-batch_size = 2
 device = "cuda"
 
 
@@ -23,7 +23,7 @@ def describe_model(net):
 
 
 def get_train_data(config):
-    data = torch.randint(low=0, high=config.vocab_size, size=(batch_size, LEN_SEQUENCE))
+    data = torch.randint(low=0, high=config.vocab_size, size=(config.batch_size, LEN_SEQUENCE))
     # TODO: add labels, wrap in named tuple
     return data.to(device)
 
@@ -68,14 +68,20 @@ def train(net, config):
     print(res.logits.shape)
     # print("loss:", res.loss.item()  )
     elapsed_time = time_end - time_start
-    cnt_tokens = LEN_SEQUENCE * cnt_batches * batch_size
+    cnt_tokens = LEN_SEQUENCE * cnt_batches * config.batch_size
     tokens_per_scond = cnt_tokens / elapsed_time
     print("done in", elapsed_time)
     print("tokens per second", tokens_per_scond)
 
 
 def main():
+    parser = argparse.ArgumentParser(prog='LLM Benchmark')
+    parser.add_argument("--batch-size")
+    args = parser.parse_args()
+    print(args)
+    # option that takes a value
     config = LlamaConfig()
+    config.batch_size = 2
     config.num_hidden_layers = 6
     config.hidden_size = 1024  # 2048
     config.intermediate_size = 2048  # 5504
@@ -85,7 +91,6 @@ def main():
     net = LlamaForCausalLM(config)
     net.to(device)
     describe_model(net)
-    # TODO: configure device
     train(net, config)
     # model_size = sum(t.numel() for t in model.parameters())
 
