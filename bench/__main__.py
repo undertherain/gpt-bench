@@ -6,9 +6,7 @@ import torch
 from .models.llama.configuration_llama import LlamaConfig
 from .models.llama.modeling_llama import LlamaForCausalLM
 
-LEN_SEQUENCE = 256
-# TODO: make batch size config
-device = "cuda"
+LEN_SEQUENCE = 16
 
 
 def describe_model(net):
@@ -25,7 +23,7 @@ def describe_model(net):
 def get_train_data(config):
     data = torch.randint(low=0, high=config.vocab_size, size=(config.batch_size, LEN_SEQUENCE))
     # TODO: add labels, wrap in named tuple
-    return data.to(device)
+    return data.to(config.device)
 
 
 def set_opimizer(net):
@@ -81,18 +79,20 @@ def train(net, config):
 
 def main():
     parser = argparse.ArgumentParser(prog='LLM Benchmark')
-    parser.add_argument("--batch-size")
+    parser.add_argument("--batch-size", type=int)
+    parser.add_argument("--device")
     args = parser.parse_args()
     config = LlamaConfig()
     config.batch_size = args.batch_size
-    config.num_hidden_layers = 6
-    config.hidden_size = 1024  # 2048
-    config.intermediate_size = 2048  # 5504
-    config.num_attention_heads = 16
+    config.device = args.device
+    config.num_hidden_layers = 3
+    config.hidden_size = 512  # 2048
+    config.intermediate_size = 1024  # 5504
+    config.num_attention_heads = 8
     # TODO: create configs for testing and production runs
     print(config)
     net = LlamaForCausalLM(config)
-    net.to(device)
+    net.to(config.device)
     describe_model(net)
     train(net, config)
     # model_size = sum(t.numel() for t in model.parameters())
