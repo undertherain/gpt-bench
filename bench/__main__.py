@@ -50,8 +50,27 @@ class Trainer:
         self.net = net
         self.config = config
 
+    def set_backedn(self):
+        pass
+
+    def set_precision(self):
+        match self.config.precision.lower():
+            case 'fp32':
+                torch.backends.cuda.matmul.allow_tf32 = False
+                torch.backends.cudnn.allow_tf32 = False
+            case 'tf32':
+                torch.backends.cuda.matmul.allow_tf32 = True
+                torch.backends.cudnn.allow_tf32 = True
+            case 'fp16':
+                self.net.half()
+            case 'bf16':
+                self.net.bfloat16()
+            case other:
+                raise RuntimeError(f"can't set precision to {self.config.precision}")
+
     def train(self):
         data = get_train_data(self.config)
+        self.set_precision()
         # TODO: do preheat
         # TODO: specify cnt repeats so that at least N samples are seen
         cnt_batches = 10
