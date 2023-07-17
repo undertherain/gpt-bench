@@ -45,29 +45,33 @@ def set_opimizer(net):
     return optimizer
 
 
-def train(net, config):
-    data = get_train_data(config)
-    # TODO: do preheat
-    # TODO: specify cnt repeats so that at least N samples are seen
-    cnt_batches = 1
-    # TODO: so far this is inference
-    optimizer = set_opimizer(net)
-    time_start = timer()
-    for i in range(cnt_batches):
-        net.zero_grad()
-        batch = {"input_ids": data, "labels": data}
-        res = net(**batch)
-        loss = res.loss
-        loss.backward()
-        optimizer.step()
-    time_end = timer()
-    print(res.logits.shape)
-    # print("loss:", res.loss.item()  )
-    elapsed_time = time_end - time_start
-    cnt_tokens = config.sequence_length * cnt_batches * config.batch_size
-    tokens_per_scond = cnt_tokens / elapsed_time
-    print("done in", elapsed_time)
-    print("tokens per second", tokens_per_scond)
+class Trainer:
+    def __init__(self, net, config):
+        self.net = net
+        self.config = config
+
+    def train(self):
+        data = get_train_data(self.config)
+        # TODO: do preheat
+        # TODO: specify cnt repeats so that at least N samples are seen
+        cnt_batches = 10
+        optimizer = set_opimizer(self.net)
+        time_start = timer()
+        for i in range(cnt_batches):
+            self.net.zero_grad()
+            batch = {"input_ids": data, "labels": data}
+            res = self.net(**batch)
+            loss = res.loss
+            loss.backward()
+            optimizer.step()
+        time_end = timer()
+        print(res.logits.shape)
+        # print("loss:", res.loss.item()  )
+        elapsed_time = time_end - time_start
+        cnt_tokens = self.config.sequence_length * cnt_batches * self.config.batch_size
+        tokens_per_scond = cnt_tokens / elapsed_time
+        print("done in", elapsed_time)
+        print("tokens per second", tokens_per_scond)
 
 
 def main():
@@ -75,11 +79,13 @@ def main():
     parser.add_argument("--batch-size", type=int)
     parser.add_argument("--sequence-length", type=int)
     parser.add_argument("--device")
+    parser.add_argument("--precision")
     args = parser.parse_args()
     config = LlamaConfig()
     config.batch_size = args.batch_size
     config.sequence_length = args.sequence_length
     config.device = args.device
+    config.precision = args.precision
     config.num_hidden_layers = 3
     config.hidden_size = 512  # 2048
     config.intermediate_size = 1024  # 5504
@@ -89,7 +95,8 @@ def main():
     net = LlamaForCausalLM(config)
     net.to(config.device)
     describe_model(net)
-    train(net, config)
+    trainer = Trainer(net, config)
+    trainer.train()
 
 
 if __name__ == "__main__":
