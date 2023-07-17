@@ -9,12 +9,7 @@ from .models.llama.modeling_llama import LlamaForCausalLM
 
 def describe_model(net):
     print(net)
-    cnt_params = 0
-    for p in net.parameters():
-        nn = 1
-        for s in list(p.size()):
-            nn = nn * s
-        cnt_params += nn
+    cnt_params = sum(t.numel() for t in net.parameters())
     print(f"cnt params: {cnt_params} ({cnt_params/10**9:0.2F}B)")
 
 
@@ -95,7 +90,6 @@ def main():
     net.to(config.device)
     describe_model(net)
     train(net, config)
-    # model_size = sum(t.numel() for t in model.parameters())
 
 
 if __name__ == "__main__":
