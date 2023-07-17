@@ -6,8 +6,6 @@ import torch
 from .models.llama.configuration_llama import LlamaConfig
 from .models.llama.modeling_llama import LlamaForCausalLM
 
-LEN_SEQUENCE = 16
-
 
 def describe_model(net):
     print(net)
@@ -21,7 +19,7 @@ def describe_model(net):
 
 
 def get_train_data(config):
-    data = torch.randint(low=0, high=config.vocab_size, size=(config.batch_size, LEN_SEQUENCE))
+    data = torch.randint(low=0, high=config.vocab_size, size=(config.batch_size, config.sequence_length))
     # TODO: add labels, wrap in named tuple
     return data.to(config.device)
 
@@ -71,7 +69,7 @@ def train(net, config):
     print(res.logits.shape)
     # print("loss:", res.loss.item()  )
     elapsed_time = time_end - time_start
-    cnt_tokens = LEN_SEQUENCE * cnt_batches * config.batch_size
+    cnt_tokens = config.sequence_length * cnt_batches * config.batch_size
     tokens_per_scond = cnt_tokens / elapsed_time
     print("done in", elapsed_time)
     print("tokens per second", tokens_per_scond)
@@ -80,10 +78,12 @@ def train(net, config):
 def main():
     parser = argparse.ArgumentParser(prog='LLM Benchmark')
     parser.add_argument("--batch-size", type=int)
+    parser.add_argument("--sequence-length", type=int)
     parser.add_argument("--device")
     args = parser.parse_args()
     config = LlamaConfig()
     config.batch_size = args.batch_size
+    config.sequence_length = args.sequence_length
     config.device = args.device
     config.num_hidden_layers = 3
     config.hidden_size = 512  # 2048
