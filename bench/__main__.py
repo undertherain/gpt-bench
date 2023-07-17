@@ -28,12 +28,7 @@ def get_train_data(config):
     return data.to(device)
 
 
-def train(net, config):
-    data = get_train_data(config)
-    # TODO: do preheat
-    # TODO: specify cnt repeats so that at least N samples are seen
-    cnt_batches = 1
-    # TODO: so far this is inference
+def set_opimizer(net):
     param_optimizer = [param for param in net.named_parameters() if param[1].requires_grad]
     params_without_weight_decay = ["bias", "gamma", "beta", "LayerNorm", "layer_norm"]
     optimizer_grouped_parameters = [
@@ -56,6 +51,16 @@ def train(net, config):
         eps=1e-06,
         weight_decay=0.01,
         betas=(0.9, 0.999))
+    return optimizer
+
+
+def train(net, config):
+    data = get_train_data(config)
+    # TODO: do preheat
+    # TODO: specify cnt repeats so that at least N samples are seen
+    cnt_batches = 1
+    # TODO: so far this is inference
+    optimizer = set_opimizer(net)
     time_start = timer()
     for i in range(cnt_batches):
         net.zero_grad()
@@ -78,10 +83,8 @@ def main():
     parser = argparse.ArgumentParser(prog='LLM Benchmark')
     parser.add_argument("--batch-size")
     args = parser.parse_args()
-    print(args)
-    # option that takes a value
     config = LlamaConfig()
-    config.batch_size = 2
+    config.batch_size = args.batch_size
     config.num_hidden_layers = 6
     config.hidden_size = 1024  # 2048
     config.intermediate_size = 2048  # 5504
