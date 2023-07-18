@@ -8,7 +8,7 @@ from .models.llama.modeling_llama import LlamaForCausalLM
 
 
 def describe_model(net):
-    print(net)
+    # print(net)
     cnt_params = sum(t.numel() for t in net.parameters())
     print(f"cnt params: {cnt_params} ({cnt_params/10**9:0.2F}B)")
 
@@ -111,12 +111,12 @@ def main():
     config.sequence_length = args.sequence_length
     config.device = args.device
     config.precision = args.precision
-    config.num_hidden_layers = 3
-    config.hidden_size = 512  # 2048
-    config.intermediate_size = 1024  # 5504
-    config.num_attention_heads = 8
+    config.num_hidden_layers = 26
+    config.hidden_size = 3200  # 2048
+    config.intermediate_size = 8640  # 5504
+    config.num_attention_heads = 32
     # TODO: create configs for testing and production runs
-    print(config)
+    # print(config)
     net = LlamaForCausalLM(config)
     net.to(config.device)
     describe_model(net)
