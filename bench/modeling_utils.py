@@ -38,7 +38,7 @@ from .pytorch_utils import (Conv1D, apply_chunking_to_forward,  # noqa: F401
 from .utils import ModelOutput  # , replace_return_docstrings
 from .utils.import_utils import (ENV_VARS_TRUE_VALUES, importlib_metadata,
                                  is_sagemaker_mp_enabled)
-from .utils.quantization_config import BitsAndBytesConfig
+# from .utils.quantization_config import BitsAndBytesConfig
 from .utils.versions import require_version_core
 
 XLA_USE_BF16 = os.environ.get("XLA_USE_BF16", "0").upper()
