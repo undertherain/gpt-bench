@@ -72,7 +72,7 @@ class Trainer:
         data = get_train_data(self.config)
         self.set_precision()
         # TODO: specify cnt repeats so that at least N samples are seen
-        cnt_batches = 10
+        cnt_batches = 50
         optimizer = set_opimizer(self.net)
         # Preheat
         self.net.zero_grad()
@@ -111,14 +111,16 @@ def main():
     config.sequence_length = args.sequence_length
     config.device = args.device
     config.precision = args.precision
-    config.num_hidden_layers = 26
+    config.num_hidden_layers = 24
     config.hidden_size = 3200  # 2048
     config.intermediate_size = 8640  # 5504
     config.num_attention_heads = 32
     # TODO: create configs for testing and production runs
     # print(config)
     net = LlamaForCausalLM(config)
+    print("model created")
     net.to(config.device)
+    print("model set to device")
     describe_model(net)
     trainer = Trainer(net, config)
     trainer.train()
