@@ -102,19 +102,25 @@ class Trainer:
 def main():
     parser = argparse.ArgumentParser(prog='LLM Benchmark')
     parser.add_argument("--batch-size", type=int)
-    parser.add_argument("--sequence-length", type=int)
     parser.add_argument("--device")
     parser.add_argument("--precision")
+    parser.add_argument("--sequence-length", type=int, default=256)
+    parser.add_argument("--hidden-size", type=int, default=3200)
+    parser.add_argument("--intermediate-size", type=int, default=3200)
+    parser.add_argument("--num-layers", type=int, default=12)
+    parser.add_argument("--num-heads", type=int, default=32)
     args = parser.parse_args()
     config = LlamaConfig()
     config.batch_size = args.batch_size
     config.sequence_length = args.sequence_length
     config.device = args.device
     config.precision = args.precision
-    config.num_hidden_layers = 12
-    config.hidden_size = 3200
-    config.intermediate_size = 6400
-    config.num_attention_heads = 32
+    config.num_hidden_layers = args.num_layers
+    config.hidden_size = args.hidden_size
+    config.intermediate_size = args.intermediate_size
+    config.num_attention_heads = args.num_heads
+    if config.sequence_length != 256:
+        print("THIS IS A DEBUG RUN AND CAN NOT BE USED FOR ACTUAL MEASUREMENT")
     # TODO: create configs for testing and production runs
     # print(config)
     net = LlamaForCausalLM(config)
