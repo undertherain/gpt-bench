@@ -111,9 +111,9 @@ def main():
     config.sequence_length = args.sequence_length
     config.device = args.device
     config.precision = args.precision
-    config.num_hidden_layers = 24
-    config.hidden_size = 3200  # 2048
-    config.intermediate_size = 8640  # 5504
+    config.num_hidden_layers = 12
+    config.hidden_size = 3200
+    config.intermediate_size = 6400
     config.num_attention_heads = 32
     # TODO: create configs for testing and production runs
     # print(config)

@@ -1,5 +1,4 @@
 python3 -m bench \
-	--batch-size=2 \
-	--sequence-length=512 \
-	--precision=bf16 \
+	--batch-size=4 \
+	--precision=fp32 \
 	--device=cuda
