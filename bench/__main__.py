@@ -71,10 +71,16 @@ class Trainer:
     def train(self):
         data = get_train_data(self.config)
         self.set_precision()
-        # TODO: do preheat
         # TODO: specify cnt repeats so that at least N samples are seen
         cnt_batches = 10
         optimizer = set_opimizer(self.net)
+        # Preheat
+        self.net.zero_grad()
+        batch = {"input_ids": data, "labels": data}
+        res = self.net(**batch)
+        loss = res.loss
+        loss.backward()
+        optimizer.step()
         time_start = timer()
         for i in range(cnt_batches):
             self.net.zero_grad()
