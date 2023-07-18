@@ -20,7 +20,7 @@ python3 -m bench \
     --device=XX
 ```    
 
-Batch size can be set to any integer number in order to accomodate devices with different amounts of memory. User can report the best throughput acheved under any batch size. 
+Batch size can be set to any integer number in order to accomodate devices with different amounts of memory. User can report the best throughput achieved under any batch size. 
 
 Precision can be one of "FP32", "TF32", "FP16", "BF16".
 User should report all supported precions along with achieved throughput number. 
