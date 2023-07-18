@@ -34,11 +34,21 @@ Additionally, for debugging purpose, the fillowing options can be specified:
 
 - --sequence-length
 - --hidden-size
-- -intermediate-size
+- --intermediate-size
 - --num-hidden-layers
 - --num-attention-heads
 
 # Modification
 
-We realize that 
+We realize that novel harware can require specific modification to benchmark code. The changes shold be submitted along with bechmark results, and satisfy the following criteria:
+
+## What can not be changed:
+
+model definition should stay as it is, 
+
+## What can be changed:
+
+model can be post-processed after being instanciated in any way that 
+- preserves original fuctionality
+- allows model to be trained in the same training loop
 
