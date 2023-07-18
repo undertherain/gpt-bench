@@ -25,16 +25,11 @@ from .utils.versions import require_version, require_version_core
 
 pkgs_to_check_at_runtime = [
     "python",
-    "tqdm",
     "regex",
-    "requests",
     "packaging",
     "filelock",
     "numpy",
-    "tokenizers",
-    "huggingface-hub",
     "safetensors",
-    "accelerate",
     "pyyaml",
 ]
 
