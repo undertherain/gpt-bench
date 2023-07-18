@@ -99,6 +99,14 @@ class Trainer:
         print("tokens per second", tokens_per_scond)
 
 
+def check_defaults(config, defaults):
+    for k, v in defaults.items():
+        if v is None:
+            continue
+        if config[k] != v:
+            print(f"{k} is not at default value of {v}, DO NOT CONSIDER THIS A PRODUCTION RUN")
+
+
 def main():
     parser = argparse.ArgumentParser(prog='LLM Benchmark')
     parser.add_argument("--batch-size", type=int)
@@ -106,23 +114,21 @@ def main():
     parser.add_argument("--precision")
     parser.add_argument("--sequence-length", type=int, default=256)
     parser.add_argument("--hidden-size", type=int, default=3200)
-    parser.add_argument("--intermediate-size", type=int, default=3200)
-    parser.add_argument("--num-layers", type=int, default=12)
-    parser.add_argument("--num-heads", type=int, default=32)
+    parser.add_argument("--intermediate-size", type=int, default=6400)
+    parser.add_argument("--num-hidden-layers", type=int, default=12)
+    parser.add_argument("--num-attention-heads", type=int, default=32)
     args = parser.parse_args()
     config = LlamaConfig()
     config.batch_size = args.batch_size
     config.sequence_length = args.sequence_length
     config.device = args.device
     config.precision = args.precision
-    config.num_hidden_layers = args.num_layers
+    config.num_hidden_layers = args.num_hidden_layers
     config.hidden_size = args.hidden_size
     config.intermediate_size = args.intermediate_size
-    config.num_attention_heads = args.num_heads
-    if config.sequence_length != 256:
-        print("THIS IS A DEBUG RUN AND CAN NOT BE USED FOR ACTUAL MEASUREMENT")
-    # TODO: create configs for testing and production runs
-    # print(config)
+    config.num_attention_heads = args.num_attention_heads
+    #print(vars(config)["num_attention_heads"])
+    check_defaults(vars(config), vars(parser.parse_args([])))
     net = LlamaForCausalLM(config)
     print("model created")
     net.to(config.device)

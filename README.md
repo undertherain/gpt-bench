@@ -21,3 +21,9 @@ User should report all supported precions along with achieved throughput number.
 If a combination of several numeric formats is used, e.g. FP32 and accumulation is done in FP16 in hardware - the whole run is considrered to be done in a precision with the lowest number of bits.  
 
 Device can be any string that can be interpreted in `torch.to(device)` call.
+
+# Debugging
+
+Additionally, for debugging purpose, the fillowing options can be specified:
+
+
