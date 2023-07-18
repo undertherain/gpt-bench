@@ -1,14 +1,23 @@
 # Large Language Modeling Benchmark
 
 This benchmark measures throughput of a causal language model training.
-The model is implemented following LLaMa architecture (e.g. using rotary embeddings) but parameterized to contain XXXX paramters, similarly to GPT-2 (1.5B) or GPT-J (6B)
+The model is implemented following LLaMa architecture (e.g. using rotary embeddings) but parameterized to contain 1.4 buiillion paramters, similarly to GPT-2 (1.5B) or GPT-J (6B)
 
 # Running
 
-All hyperparameters are fixed, except for the batch size.
-This is done in order to accomodate for devices with smaller available memory.
-Specify batch size as `--batch_size=XX`. Users can report best peroformance achieved under any batch size.
+Run the module as follows:
 
-# Reporting
+```
+python3 -m bench \
+    --batch-size=XX \
+    --precision=XXXX \
+    --device=XX
+```    
 
-report list of precisions the benchmark could run and thoughput in samples per second for each
+Batch size can be set to any integer number in order to accomodate devices with different amounts of memory. User can report the best throughput acheved under any batch size. 
+
+Precision can be one of "FP32", "TF32", "FP16", "BF16".
+User should report all supported precions along with achieved throughput number. 
+If a combination of several numeric formats is used, e.g. FP32 and accumulation is done in FP16 in hardware - the whole run is considrered to be done in a precision with the lowest number of bits.  
+
+Device can be any string that can be interpreted in `torch.to(device)` call.
