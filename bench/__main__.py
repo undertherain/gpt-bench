@@ -54,19 +54,19 @@ class Trainer:
         pass
 
     def set_precision(self):
-        match self.config.precision.lower():
-            case 'fp32':
-                torch.backends.cuda.matmul.allow_tf32 = False
-                torch.backends.cudnn.allow_tf32 = False
-            case 'tf32':
-                torch.backends.cuda.matmul.allow_tf32 = True
-                torch.backends.cudnn.allow_tf32 = True
-            case 'fp16':
-                self.net.half()
-            case 'bf16':
-                self.net.bfloat16()
-            case other:
-                raise RuntimeError(f"can't set precision to {self.config.precision}")
+        prec = self.config.precision.lower()
+        if prec == "fp32":
+            torch.backends.cuda.matmul.allow_tf32 = False
+            torch.backends.cudnn.allow_tf32 = False
+        elif prec == "tf32":
+            torch.backends.cuda.matmul.allow_tf32 = True
+            torch.backends.cudnn.allow_tf32 = True
+        elif prec == "fp16":
+            self.net.half()
+        elif prec == "bf16":
+            self.net.bfloat16()
+        else:
+            raise RuntimeError(f"can't set precision to {self.config.precision}")
 
     def train(self):
         data = get_train_data(self.config)
