@@ -446,65 +446,65 @@ def set_initialized_submodules(model, state_dict_keys):
             module._is_hf_initialized = True
 
 
-def _load_state_dict_into_model(model_to_load, state_dict, start_prefix):
-    # Convert old format to new format if needed from a PyTorch state_dict
-    old_keys = []
-    new_keys = []
-    for key in state_dict.keys():
-        new_key = None
-        if "gamma" in key:
-            new_key = key.replace("gamma", "weight")
-        if "beta" in key:
-            new_key = key.replace("beta", "bias")
-        if new_key:
-            old_keys.append(key)
-            new_keys.append(new_key)
-    for old_key, new_key in zip(old_keys, new_keys):
-        state_dict[new_key] = state_dict.pop(old_key)
+# def _load_state_dict_into_model(model_to_load, state_dict, start_prefix):
+#     # Convert old format to new format if needed from a PyTorch state_dict
+#     old_keys = []
+#     new_keys = []
+#     for key in state_dict.keys():
+#         new_key = None
+#         if "gamma" in key:
+#             new_key = key.replace("gamma", "weight")
+#         if "beta" in key:
+#             new_key = key.replace("beta", "bias")
+#         if new_key:
+#             old_keys.append(key)
+#             new_keys.append(new_key)
+#     for old_key, new_key in zip(old_keys, new_keys):
+#         state_dict[new_key] = state_dict.pop(old_key)
 
-    # copy state_dict so _load_from_state_dict can modify it
-    metadata = getattr(state_dict, "_metadata", None)
-    state_dict = state_dict.copy()
-    if metadata is not None:
-        state_dict._metadata = metadata
+#     # copy state_dict so _load_from_state_dict can modify it
+#     metadata = getattr(state_dict, "_metadata", None)
+#     state_dict = state_dict.copy()
+#     if metadata is not None:
+#         state_dict._metadata = metadata
 
-    error_msgs = []
+#     error_msgs = []
 
-    # PyTorch's `_load_from_state_dict` does not copy parameters in a module's descendants
-    # so we need to apply the function recursively.
-    def load(module: nn.Module, state_dict, prefix=""):
-        local_metadata = {} if metadata is None else metadata.get(prefix[:-1], {})
-        args = (state_dict, prefix, local_metadata, True, [], [], error_msgs)
-        # Parameters of module and children will start with prefix. We can exit early if there are none in this
-        # state_dict
-        if len([key for key in state_dict if key.startswith(prefix)]) > 0:
-            if is_deepspeed_zero3_enabled():
-                import deepspeed
+#     # PyTorch's `_load_from_state_dict` does not copy parameters in a module's descendants
+#     # so we need to apply the function recursively.
+#     def load(module: nn.Module, state_dict, prefix=""):
+#         local_metadata = {} if metadata is None else metadata.get(prefix[:-1], {})
+#         args = (state_dict, prefix, local_metadata, True, [], [], error_msgs)
+#         # Parameters of module and children will start with prefix. We can exit early if there are none in this
+#         # state_dict
+#         if len([key for key in state_dict if key.startswith(prefix)]) > 0:
+#             if is_deepspeed_zero3_enabled():
+#                 import deepspeed
 
-                # In sharded models, each shard has only part of the full state_dict, so only gather
-                # parameters that are in the current state_dict.
-                named_parameters = dict(module.named_parameters(prefix=prefix[:-1], recurse=False))
-                params_to_gather = [named_parameters[k] for k in state_dict.keys() if k in named_parameters]
-                if len(params_to_gather) > 0:
-                    # because zero3 puts placeholders in model params, this context
-                    # manager gathers (unpartitions) the params of the current layer, then loads from
-                    # the state dict and then re-partitions them again
-                    with deepspeed.zero.GatheredParameters(params_to_gather, modifier_rank=0):
-                        if torch.distributed.get_rank() == 0:
-                            module._load_from_state_dict(*args)
-            else:
-                module._load_from_state_dict(*args)
+#                 # In sharded models, each shard has only part of the full state_dict, so only gather
+#                 # parameters that are in the current state_dict.
+#                 named_parameters = dict(module.named_parameters(prefix=prefix[:-1], recurse=False))
+#                 params_to_gather = [named_parameters[k] for k in state_dict.keys() if k in named_parameters]
+#                 if len(params_to_gather) > 0:
+#                     # because zero3 puts placeholders in model params, this context
+#                     # manager gathers (unpartitions) the params of the current layer, then loads from
+#                     # the state dict and then re-partitions them again
+#                     with deepspeed.zero.GatheredParameters(params_to_gather, modifier_rank=0):
+#                         if torch.distributed.get_rank() == 0:
+#                             module._load_from_state_dict(*args)
+#             else:
+#                 module._load_from_state_dict(*args)
 
-        for name, child in module._modules.items():
-            if child is not None:
-                load(child, state_dict, prefix + name + ".")
+#         for name, child in module._modules.items():
+#             if child is not None:
+#                 load(child, state_dict, prefix + name + ".")
 
-    load(model_to_load, state_dict, prefix=start_prefix)
-    # Delete `state_dict` so it could be collected by GC earlier. Note that `state_dict` is a copy of the argument, so
-    # it's safe to delete it.
-    del state_dict
+#     load(model_to_load, state_dict, prefix=start_prefix)
+#     # Delete `state_dict` so it could be collected by GC earlier. Note that `state_dict` is a copy of the argument, so
+#     # it's safe to delete it.
+#     del state_dict
 
-    return error_msgs
+#     return error_msgs
 
 
 def find_submodule_and_param_name(model, long_key, start_prefix):
