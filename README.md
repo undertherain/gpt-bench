@@ -79,6 +79,6 @@ point to which lines of code can be modified
 
 Submit modified code along with results
 PR to a corresponding branch,
-contact if any isses though githhub issues
+contact if any issues through GitHub issues
 
-For questions contact RIKEN CCS <a href="[https://www.example.com/my great page](https://www.r-ccs.riken.jp/en/research/labs/hpaisrt/)https://www.r-ccs.riken.jp/en/research/labs/hpaisrt/">HPAIS</a> team.
+For questions contact RIKEN CCS <a href="https://www.r-ccs.riken.jp/en/research/labs/hpaisrt/">HPAIS</a> team.
