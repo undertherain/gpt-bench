@@ -15,8 +15,7 @@ def describe_model(net):
 
 def get_train_data(config):
     data = torch.randint(low=0, high=config.vocab_size, size=(config.batch_size, config.sequence_length))
-    # TODO: add labels, wrap in named tuple
-    return data.to(config.device)
+    return data
 
 
 def set_opimizer(net):
@@ -55,7 +54,9 @@ class Trainer:
         self.net = net
         self.config = config
 
-    def set_precision(self):
+    def set_model_and_data(self):
+        # To the extend possible implement all post-processing of the model within this method.
+        # Add support for new numeric formats here if needed
         prec = self.config.precision.lower()
         if prec == "fp32":
             torch.backends.cuda.matmul.allow_tf32 = False
@@ -67,25 +68,19 @@ class Trainer:
             self.net.half()
         elif prec == "bf16":
             self.net.bfloat16()
-        # Add support for new numeric formats here if needed
         else:
             raise RuntimeError(f"can't set precision to {self.config.precision}")
-
-    def post_process_model(self):
-        # To the extend possible implement all post-processing of the model within this method.
-        pass
+        self.net.to(self.config.device)
+        self.data = self.data.to(self.config.device)
 
     def train(self):
-        data = get_train_data(self.config)
-        self.set_precision()
-        self.post_process_model()
-        self.net.to(self.config.device)
-        # TODO: specify cnt repeats so that at least N samples are seen
+        self.data = get_train_data(self.config)
+        self.set_model_and_data()
         cnt_batches = 50
         optimizer = set_opimizer(self.net)
         # Preheat
         self.net.zero_grad()
-        batch = {"input_ids": data, "labels": data}
+        batch = {"input_ids": self.data, "labels": self.data}
         res = self.net(**batch)
         loss = res.loss
         loss.backward()
@@ -93,7 +88,7 @@ class Trainer:
         time_start = timer()
         for i in range(cnt_batches):
             self.net.zero_grad()
-            batch = {"input_ids": data, "labels": data}
+            batch = {"input_ids": self.data, "labels": self.data}
             res = self.net(**batch)
             loss = res.loss
             loss.backward()
@@ -136,7 +131,6 @@ def main():
     config.hidden_size = args.hidden_size
     config.intermediate_size = args.intermediate_size
     config.num_attention_heads = args.num_attention_heads
-    #print(vars(config)["num_attention_heads"])
     check_defaults(vars(config), vars(parser.parse_args([])))
     set_environment()
     net = LlamaForCausalLM(config)
