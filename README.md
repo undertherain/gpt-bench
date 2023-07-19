@@ -10,16 +10,13 @@ each with 32 attention heads, embedding size of 3200 and mixing layer of size 64
 
 The model is trained on synthetic sequences, each 256 tokens long.
 
-Expected minimal memory footprint for the model is 
-
-
-todo memory footprint
-todo dependencies
-
 # Correctness
 
 In order to be able to execute in relatively short time, the benchmark does not check for convergence to a given fidelity metric etc. 
 We expect that all operations are performed correctly in corresponding numeric formats, according to the model definition.
+
+# Dependencies
+
 
 # Running
 
