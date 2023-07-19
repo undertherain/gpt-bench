@@ -21,7 +21,7 @@ import re
 import warnings
 from contextlib import contextmanager
 # from dataclasses import dataclass
-from functools import partial
+# from functools import partial
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import torch
@@ -309,130 +309,130 @@ def shard_checkpoint(
     return shards, index
 
 
-def load_sharded_checkpoint(model, folder, strict=True, prefer_safe=True):
-    """
-    This is the same as
-    [`torch.nn.Module.load_state_dict`](https://pytorch.org/docs/stable/generated/torch.nn.Module.html?highlight=load_state_dict#torch.nn.Module.load_state_dict)
-    but for a sharded checkpoint.
+# def load_sharded_checkpoint(model, folder, strict=True, prefer_safe=True):
+#     """
+#     This is the same as
+#     [`torch.nn.Module.load_state_dict`](https://pytorch.org/docs/stable/generated/torch.nn.Module.html?highlight=load_state_dict#torch.nn.Module.load_state_dict)
+#     but for a sharded checkpoint.
 
-    This load is performed efficiently: each checkpoint shard is loaded one by one in RAM and deleted after being
-    loaded in the model.
+#     This load is performed efficiently: each checkpoint shard is loaded one by one in RAM and deleted after being
+#     loaded in the model.
 
-    Args:
-        model (`torch.nn.Module`): The model in which to load the checkpoint.
-        folder (`str` or `os.PathLike`): A path to a folder containing the sharded checkpoint.
-        strict (`bool`, *optional`, defaults to `True`):
-            Whether to strictly enforce that the keys in the model state dict match the keys in the sharded checkpoint.
-        prefer_safe (`bool`, *optional*, defaults to `False`)
-            If both safetensors and PyTorch save files are present in checkpoint and `prefer_safe` is True, the
-            safetensors files will be loaded. Otherwise, PyTorch files are always loaded when possible.
+#     Args:
+#         model (`torch.nn.Module`): The model in which to load the checkpoint.
+#         folder (`str` or `os.PathLike`): A path to a folder containing the sharded checkpoint.
+#         strict (`bool`, *optional`, defaults to `True`):
+#             Whether to strictly enforce that the keys in the model state dict match the keys in the sharded checkpoint.
+#         prefer_safe (`bool`, *optional*, defaults to `False`)
+#             If both safetensors and PyTorch save files are present in checkpoint and `prefer_safe` is True, the
+#             safetensors files will be loaded. Otherwise, PyTorch files are always loaded when possible.
 
-    Returns:
-        `NamedTuple`: A named tuple with `missing_keys` and `unexpected_keys` fields
-            - `missing_keys` is a list of str containing the missing keys
-            - `unexpected_keys` is a list of str containing the unexpected keys
-    """
-    # Load the index
-    index_file = os.path.join(folder, WEIGHTS_INDEX_NAME)
-    safe_index_file = os.path.join(folder, SAFE_WEIGHTS_INDEX_NAME)
+#     Returns:
+#         `NamedTuple`: A named tuple with `missing_keys` and `unexpected_keys` fields
+#             - `missing_keys` is a list of str containing the missing keys
+#             - `unexpected_keys` is a list of str containing the unexpected keys
+#     """
+#     # Load the index
+#     index_file = os.path.join(folder, WEIGHTS_INDEX_NAME)
+#     safe_index_file = os.path.join(folder, SAFE_WEIGHTS_INDEX_NAME)
 
-    index_present = os.path.isfile(index_file)
-    safe_index_present = os.path.isfile(safe_index_file)
+#     index_present = os.path.isfile(index_file)
+#     safe_index_present = os.path.isfile(safe_index_file)
 
-    if not index_present and not (safe_index_present and is_safetensors_available()):
-        filenames = (
-            (WEIGHTS_INDEX_NAME, SAFE_WEIGHTS_INDEX_NAME) if is_safetensors_available() else (WEIGHTS_INDEX_NAME,)
-        )
-        raise ValueError(f"Can't find a checkpoint index ({' or '.join(filenames)}) in {folder}.")
+#     if not index_present and not (safe_index_present and is_safetensors_available()):
+#         filenames = (
+#             (WEIGHTS_INDEX_NAME, SAFE_WEIGHTS_INDEX_NAME) if is_safetensors_available() else (WEIGHTS_INDEX_NAME,)
+#         )
+#         raise ValueError(f"Can't find a checkpoint index ({' or '.join(filenames)}) in {folder}.")
 
-    load_safe = False
-    if safe_index_present:
-        if prefer_safe:
-            if is_safetensors_available():
-                load_safe = True  # load safe due to preference
-            else:
-                logger.warning(
-                    f"Cannot load sharded checkpoint at {folder} safely since safetensors is not installed!"
-                )
-        elif not index_present:
-            load_safe = True  # load safe since we have no other choice
+#     load_safe = False
+#     if safe_index_present:
+#         if prefer_safe:
+#             if is_safetensors_available():
+#                 load_safe = True  # load safe due to preference
+#             else:
+#                 logger.warning(
+#                     f"Cannot load sharded checkpoint at {folder} safely since safetensors is not installed!"
+#                 )
+#         elif not index_present:
+#             load_safe = True  # load safe since we have no other choice
 
-    load_index = safe_index_file if load_safe else index_file
+#     load_index = safe_index_file if load_safe else index_file
 
-    with open(load_index, "r", encoding="utf-8") as f:
-        index = json.load(f)
+#     with open(load_index, "r", encoding="utf-8") as f:
+#         index = json.load(f)
 
-    shard_files = list(set(index["weight_map"].values()))
+#     shard_files = list(set(index["weight_map"].values()))
 
-    # If strict=True, error before loading any of the state dicts.
-    loaded_keys = index["weight_map"].keys()
-    model_keys = model.state_dict().keys()
-    missing_keys = [key for key in model_keys if key not in loaded_keys]
-    unexpected_keys = [key for key in loaded_keys if key not in model_keys]
-    if strict and (len(missing_keys) > 0 or len(unexpected_keys) > 0):
-        error_message = f"Error(s) in loading state_dict for {model.__class__.__name__}"
-        if len(missing_keys) > 0:
-            str_missing_keys = ",".join([f'"{k}"' for k in missing_keys])
-            error_message += f"\nMissing key(s): {str_missing_keys}."
-        if len(unexpected_keys) > 0:
-            str_unexpected_keys = ",".join([f'"{k}"' for k in unexpected_keys])
-            error_message += f"\nMissing key(s): {str_unexpected_keys}."
-        raise RuntimeError(error_message)
+#     # If strict=True, error before loading any of the state dicts.
+#     loaded_keys = index["weight_map"].keys()
+#     model_keys = model.state_dict().keys()
+#     missing_keys = [key for key in model_keys if key not in loaded_keys]
+#     unexpected_keys = [key for key in loaded_keys if key not in model_keys]
+#     if strict and (len(missing_keys) > 0 or len(unexpected_keys) > 0):
+#         error_message = f"Error(s) in loading state_dict for {model.__class__.__name__}"
+#         if len(missing_keys) > 0:
+#             str_missing_keys = ",".join([f'"{k}"' for k in missing_keys])
+#             error_message += f"\nMissing key(s): {str_missing_keys}."
+#         if len(unexpected_keys) > 0:
+#             str_unexpected_keys = ",".join([f'"{k}"' for k in unexpected_keys])
+#             error_message += f"\nMissing key(s): {str_unexpected_keys}."
+#         raise RuntimeError(error_message)
 
-    loader = safe_load_file if load_safe else partial(torch.load, map_location="cpu")
+#     loader = safe_load_file if load_safe else partial(torch.load, map_location="cpu")
 
-    for shard_file in shard_files:
-        state_dict = loader(os.path.join(folder, shard_file))
-        model.load_state_dict(state_dict, strict=False)
+#     for shard_file in shard_files:
+#         state_dict = loader(os.path.join(folder, shard_file))
+#         model.load_state_dict(state_dict, strict=False)
 
-        # Make sure memory is freed before we load the next state dict.
-        del state_dict
-        gc.collect()
+#         # Make sure memory is freed before we load the next state dict.
+#         del state_dict
+#         gc.collect()
 
-    # Return the same thing as PyTorch load_state_dict function.
-    return torch.nn.modules.module._IncompatibleKeys(missing_keys, unexpected_keys)
+#     # Return the same thing as PyTorch load_state_dict function.
+#     return torch.nn.modules.module._IncompatibleKeys(missing_keys, unexpected_keys)
 
 
-def load_state_dict(checkpoint_file: Union[str, os.PathLike]):
-    """
-    Reads a PyTorch checkpoint file, returning properly formatted errors if they arise.
-    """
-    if checkpoint_file.endswith(".safetensors") and is_safetensors_available():
-        # Check format of the archive
-        with safe_open(checkpoint_file, framework="pt") as f:
-            metadata = f.metadata()
-        if metadata.get("format") not in ["pt", "tf", "flax"]:
-            raise OSError(
-                f"The safetensors archive passed at {checkpoint_file} does not contain the valid metadata. Make sure "
-                "you save your model with the `save_pretrained` method."
-            )
-        elif metadata["format"] != "pt":
-            raise NotImplementedError(
-                f"Conversion from a {metadata['format']} safetensors archive to PyTorch is not implemented yet."
-            )
-        return safe_load_file(checkpoint_file)
-    try:
-        return torch.load(checkpoint_file, map_location="cpu")
-    except Exception as e:
-        try:
-            with open(checkpoint_file) as f:
-                if f.read(7) == "version":
-                    raise OSError(
-                        "You seem to have cloned a repository without having git-lfs installed. Please install "
-                        "git-lfs and run `git lfs install` followed by `git lfs pull` in the folder "
-                        "you cloned."
-                    )
-                else:
-                    raise ValueError(
-                        f"Unable to locate the file {checkpoint_file} which is necessary to load this pretrained "
-                        "model. Make sure you have saved the model properly."
-                    ) from e
-        except (UnicodeDecodeError, ValueError):
-            raise OSError(
-                f"Unable to load weights from pytorch checkpoint file for '{checkpoint_file}' "
-                f"at '{checkpoint_file}'. "
-                "If you tried to load a PyTorch model from a TF 2.0 checkpoint, please set from_tf=True."
-            )
+# def load_state_dict(checkpoint_file: Union[str, os.PathLike]):
+#     """
+#     Reads a PyTorch checkpoint file, returning properly formatted errors if they arise.
+#     """
+#     if checkpoint_file.endswith(".safetensors") and is_safetensors_available():
+#         # Check format of the archive
+#         with safe_open(checkpoint_file, framework="pt") as f:
+#             metadata = f.metadata()
+#         if metadata.get("format") not in ["pt", "tf", "flax"]:
+#             raise OSError(
+#                 f"The safetensors archive passed at {checkpoint_file} does not contain the valid metadata. Make sure "
+#                 "you save your model with the `save_pretrained` method."
+#             )
+#         elif metadata["format"] != "pt":
+#             raise NotImplementedError(
+#                 f"Conversion from a {metadata['format']} safetensors archive to PyTorch is not implemented yet."
+#             )
+#         return safe_load_file(checkpoint_file)
+#     try:
+#         return torch.load(checkpoint_file, map_location="cpu")
+#     except Exception as e:
+#         try:
+#             with open(checkpoint_file) as f:
+#                 if f.read(7) == "version":
+#                     raise OSError(
+#                         "You seem to have cloned a repository without having git-lfs installed. Please install "
+#                         "git-lfs and run `git lfs install` followed by `git lfs pull` in the folder "
+#                         "you cloned."
+#                     )
+#                 else:
+#                     raise ValueError(
+#                         f"Unable to locate the file {checkpoint_file} which is necessary to load this pretrained "
+#                         "model. Make sure you have saved the model properly."
+#                     ) from e
+#         except (UnicodeDecodeError, ValueError):
+#             raise OSError(
+#                 f"Unable to load weights from pytorch checkpoint file for '{checkpoint_file}' "
+#                 f"at '{checkpoint_file}'. "
+#                 "If you tried to load a PyTorch model from a TF 2.0 checkpoint, please set from_tf=True."
+#             )
 
 
 def set_initialized_submodules(model, state_dict_keys):
