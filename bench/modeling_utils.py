@@ -20,12 +20,11 @@ import os
 import re
 import warnings
 from contextlib import contextmanager
-from dataclasses import dataclass
+# from dataclasses import dataclass
 from functools import partial
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import torch
-from packaging import version
 from torch import Tensor, nn
 from torch.nn import CrossEntropyLoss, Identity
 
@@ -3342,31 +3341,31 @@ class PreTrainedModel(nn.Module, ModuleUtilsMixin):
         error_msgs = _load_state_dict_into_meta_model(model, state_dict, loaded_state_dict_keys, start_prefix)
         return error_msgs
 
-    @classmethod
-    def register_for_auto_class(cls, auto_class="AutoModel"):
-        """
-        Register this class with a given auto class. This should only be used for custom models as the ones in the
-        library are already mapped with an auto class.
+    # @classmethod
+    # def register_for_auto_class(cls, auto_class="AutoModel"):
+    #     """
+    #     Register this class with a given auto class. This should only be used for custom models as the ones in the
+    #     library are already mapped with an auto class.
 
-        <Tip warning={true}>
+    #     <Tip warning={true}>
 
-        This API is experimental and may have some slight breaking changes in the next releases.
+    #     This API is experimental and may have some slight breaking changes in the next releases.
 
-        </Tip>
+    #     </Tip>
 
-        Args:
-            auto_class (`str` or `type`, *optional*, defaults to `"AutoModel"`):
-                The auto class to register this new model with.
-        """
-        if not isinstance(auto_class, str):
-            auto_class = auto_class.__name__
+    #     Args:
+    #         auto_class (`str` or `type`, *optional*, defaults to `"AutoModel"`):
+    #             The auto class to register this new model with.
+    #     """
+    #     if not isinstance(auto_class, str):
+    #         auto_class = auto_class.__name__
 
-        import transformers.models.auto as auto_module
+    #     import transformers.models.auto as auto_module
 
-        if not hasattr(auto_module, auto_class):
-            raise ValueError(f"{auto_class} is not a valid auto class.")
+    #     if not hasattr(auto_module, auto_class):
+    #         raise ValueError(f"{auto_class} is not a valid auto class.")
 
-        cls._auto_class = auto_class
+    #     cls._auto_class = auto_class
 
     def to_bettertransformer(self) -> "PreTrainedModel":
         """
@@ -3598,251 +3597,251 @@ class PoolerAnswerClass(nn.Module):
         return x
 
 
-@dataclass
-class SquadHeadOutput(ModelOutput):
-    """
-    Base class for outputs of question answering models using a [`~modeling_utils.SQuADHead`].
+# @dataclass
+# class SquadHeadOutput(ModelOutput):
+#     """
+#     Base class for outputs of question answering models using a [`~modeling_utils.SQuADHead`].
 
-    Args:
-        loss (`torch.FloatTensor` of shape `(1,)`, *optional*, returned if both `start_positions` and `end_positions` are provided):
-            Classification loss as the sum of start token, end token (and is_impossible if provided) classification
-            losses.
-        start_top_log_probs (`torch.FloatTensor` of shape `(batch_size, config.start_n_top)`, *optional*, returned if `start_positions` or `end_positions` is not provided):
-            Log probabilities for the top config.start_n_top start token possibilities (beam-search).
-        start_top_index (`torch.LongTensor` of shape `(batch_size, config.start_n_top)`, *optional*, returned if `start_positions` or `end_positions` is not provided):
-            Indices for the top config.start_n_top start token possibilities (beam-search).
-        end_top_log_probs (`torch.FloatTensor` of shape `(batch_size, config.start_n_top * config.end_n_top)`, *optional*, returned if `start_positions` or `end_positions` is not provided):
-            Log probabilities for the top `config.start_n_top * config.end_n_top` end token possibilities
-            (beam-search).
-        end_top_index (`torch.LongTensor` of shape `(batch_size, config.start_n_top * config.end_n_top)`, *optional*, returned if `start_positions` or `end_positions` is not provided):
-            Indices for the top `config.start_n_top * config.end_n_top` end token possibilities (beam-search).
-        cls_logits (`torch.FloatTensor` of shape `(batch_size,)`, *optional*, returned if `start_positions` or `end_positions` is not provided):
-            Log probabilities for the `is_impossible` label of the answers.
+#     Args:
+#         loss (`torch.FloatTensor` of shape `(1,)`, *optional*, returned if both `start_positions` and `end_positions` are provided):
+#             Classification loss as the sum of start token, end token (and is_impossible if provided) classification
+#             losses.
+#         start_top_log_probs (`torch.FloatTensor` of shape `(batch_size, config.start_n_top)`, *optional*, returned if `start_positions` or `end_positions` is not provided):
+#             Log probabilities for the top config.start_n_top start token possibilities (beam-search).
+#         start_top_index (`torch.LongTensor` of shape `(batch_size, config.start_n_top)`, *optional*, returned if `start_positions` or `end_positions` is not provided):
+#             Indices for the top config.start_n_top start token possibilities (beam-search).
+#         end_top_log_probs (`torch.FloatTensor` of shape `(batch_size, config.start_n_top * config.end_n_top)`, *optional*, returned if `start_positions` or `end_positions` is not provided):
+#             Log probabilities for the top `config.start_n_top * config.end_n_top` end token possibilities
+#             (beam-search).
+#         end_top_index (`torch.LongTensor` of shape `(batch_size, config.start_n_top * config.end_n_top)`, *optional*, returned if `start_positions` or `end_positions` is not provided):
+#             Indices for the top `config.start_n_top * config.end_n_top` end token possibilities (beam-search).
+#         cls_logits (`torch.FloatTensor` of shape `(batch_size,)`, *optional*, returned if `start_positions` or `end_positions` is not provided):
+#             Log probabilities for the `is_impossible` label of the answers.
 
-    """
+#     """
 
-    loss: Optional[torch.FloatTensor] = None
-    start_top_log_probs: Optional[torch.FloatTensor] = None
-    start_top_index: Optional[torch.LongTensor] = None
-    end_top_log_probs: Optional[torch.FloatTensor] = None
-    end_top_index: Optional[torch.LongTensor] = None
-    cls_logits: Optional[torch.FloatTensor] = None
-
-
-class SQuADHead(nn.Module):
-    r"""
-    A SQuAD head inspired by XLNet.
-
-    Args:
-        config ([`PretrainedConfig`]):
-            The config used by the model, will be used to grab the `hidden_size` of the model and the `layer_norm_eps`
-            to use.
-    """
-
-    def __init__(self, config):
-        super().__init__()
-        self.start_n_top = config.start_n_top
-        self.end_n_top = config.end_n_top
-
-        self.start_logits = PoolerStartLogits(config)
-        self.end_logits = PoolerEndLogits(config)
-        self.answer_class = PoolerAnswerClass(config)
-
-    # @replace_return_docstrings(output_type=SquadHeadOutput, config_class=PretrainedConfig)
-    def forward(
-        self,
-        hidden_states: torch.FloatTensor,
-        start_positions: Optional[torch.LongTensor] = None,
-        end_positions: Optional[torch.LongTensor] = None,
-        cls_index: Optional[torch.LongTensor] = None,
-        is_impossible: Optional[torch.LongTensor] = None,
-        p_mask: Optional[torch.FloatTensor] = None,
-        return_dict: bool = False,
-    ) -> Union[SquadHeadOutput, Tuple[torch.FloatTensor]]:
-        """
-        Args:
-            hidden_states (`torch.FloatTensor` of shape `(batch_size, seq_len, hidden_size)`):
-                Final hidden states of the model on the sequence tokens.
-            start_positions (`torch.LongTensor` of shape `(batch_size,)`, *optional*):
-                Positions of the first token for the labeled span.
-            end_positions (`torch.LongTensor` of shape `(batch_size,)`, *optional*):
-                Positions of the last token for the labeled span.
-            cls_index (`torch.LongTensor` of shape `(batch_size,)`, *optional*):
-                Position of the CLS token for each sentence in the batch. If `None`, takes the last token.
-            is_impossible (`torch.LongTensor` of shape `(batch_size,)`, *optional*):
-                Whether the question has a possible answer in the paragraph or not.
-            p_mask (`torch.FloatTensor` of shape `(batch_size, seq_len)`, *optional*):
-                Mask for tokens at invalid position, such as query and special symbols (PAD, SEP, CLS). 1.0 means token
-                should be masked.
-            return_dict (`bool`, *optional*, defaults to `False`):
-                Whether or not to return a [`~utils.ModelOutput`] instead of a plain tuple.
-
-        Returns:
-        """
-        start_logits = self.start_logits(hidden_states, p_mask=p_mask)
-
-        if start_positions is not None and end_positions is not None:
-            # If we are on multi-GPU, let's remove the dimension added by batch splitting
-            for x in (start_positions, end_positions, cls_index, is_impossible):
-                if x is not None and x.dim() > 1:
-                    x.squeeze_(-1)
-
-            # during training, compute the end logits based on the ground truth of the start position
-            end_logits = self.end_logits(hidden_states, start_positions=start_positions, p_mask=p_mask)
-
-            loss_fct = CrossEntropyLoss()
-            start_loss = loss_fct(start_logits, start_positions)
-            end_loss = loss_fct(end_logits, end_positions)
-            total_loss = (start_loss + end_loss) / 2
-
-            if cls_index is not None and is_impossible is not None:
-                # Predict answerability from the representation of CLS and START
-                cls_logits = self.answer_class(hidden_states, start_positions=start_positions, cls_index=cls_index)
-                loss_fct_cls = nn.BCEWithLogitsLoss()
-                cls_loss = loss_fct_cls(cls_logits, is_impossible)
-
-                # note(zhiliny): by default multiply the loss by 0.5 so that the scale is comparable to start_loss and end_loss
-                total_loss += cls_loss * 0.5
-
-            return SquadHeadOutput(loss=total_loss) if return_dict else (total_loss,)
-
-        else:
-            # during inference, compute the end logits based on beam search
-            bsz, slen, hsz = hidden_states.size()
-            start_log_probs = nn.functional.softmax(start_logits, dim=-1)  # shape (bsz, slen)
-
-            start_top_log_probs, start_top_index = torch.topk(
-                start_log_probs, self.start_n_top, dim=-1
-            )  # shape (bsz, start_n_top)
-            start_top_index_exp = start_top_index.unsqueeze(-1).expand(-1, -1, hsz)  # shape (bsz, start_n_top, hsz)
-            start_states = torch.gather(hidden_states, -2, start_top_index_exp)  # shape (bsz, start_n_top, hsz)
-            start_states = start_states.unsqueeze(1).expand(-1, slen, -1, -1)  # shape (bsz, slen, start_n_top, hsz)
-
-            hidden_states_expanded = hidden_states.unsqueeze(2).expand_as(
-                start_states
-            )  # shape (bsz, slen, start_n_top, hsz)
-            p_mask = p_mask.unsqueeze(-1) if p_mask is not None else None
-            end_logits = self.end_logits(hidden_states_expanded, start_states=start_states, p_mask=p_mask)
-            end_log_probs = nn.functional.softmax(end_logits, dim=1)  # shape (bsz, slen, start_n_top)
-
-            end_top_log_probs, end_top_index = torch.topk(
-                end_log_probs, self.end_n_top, dim=1
-            )  # shape (bsz, end_n_top, start_n_top)
-            end_top_log_probs = end_top_log_probs.view(-1, self.start_n_top * self.end_n_top)
-            end_top_index = end_top_index.view(-1, self.start_n_top * self.end_n_top)
-
-            start_states = torch.einsum("blh,bl->bh", hidden_states, start_log_probs)
-            cls_logits = self.answer_class(hidden_states, start_states=start_states, cls_index=cls_index)
-
-            if not return_dict:
-                return (start_top_log_probs, start_top_index, end_top_log_probs, end_top_index, cls_logits)
-            else:
-                return SquadHeadOutput(
-                    start_top_log_probs=start_top_log_probs,
-                    start_top_index=start_top_index,
-                    end_top_log_probs=end_top_log_probs,
-                    end_top_index=end_top_index,
-                    cls_logits=cls_logits,
-                )
+#     loss: Optional[torch.FloatTensor] = None
+#     start_top_log_probs: Optional[torch.FloatTensor] = None
+#     start_top_index: Optional[torch.LongTensor] = None
+#     end_top_log_probs: Optional[torch.FloatTensor] = None
+#     end_top_index: Optional[torch.LongTensor] = None
+#     cls_logits: Optional[torch.FloatTensor] = None
 
 
-class SequenceSummary(nn.Module):
-    r"""
-    Compute a single vector summary of a sequence hidden states.
+# class SQuADHead(nn.Module):
+#     r"""
+#     A SQuAD head inspired by XLNet.
 
-    Args:
-        config ([`PretrainedConfig`]):
-            The config used by the model. Relevant arguments in the config class of the model are (refer to the actual
-            config class of your model for the default values it uses):
+#     Args:
+#         config ([`PretrainedConfig`]):
+#             The config used by the model, will be used to grab the `hidden_size` of the model and the `layer_norm_eps`
+#             to use.
+#     """
 
-            - **summary_type** (`str`) -- The method to use to make this summary. Accepted values are:
+#     def __init__(self, config):
+#         super().__init__()
+#         self.start_n_top = config.start_n_top
+#         self.end_n_top = config.end_n_top
 
-                - `"last"` -- Take the last token hidden state (like XLNet)
-                - `"first"` -- Take the first token hidden state (like Bert)
-                - `"mean"` -- Take the mean of all tokens hidden states
-                - `"cls_index"` -- Supply a Tensor of classification token position (GPT/GPT-2)
-                - `"attn"` -- Not implemented now, use multi-head attention
+#         self.start_logits = PoolerStartLogits(config)
+#         self.end_logits = PoolerEndLogits(config)
+#         self.answer_class = PoolerAnswerClass(config)
 
-            - **summary_use_proj** (`bool`) -- Add a projection after the vector extraction.
-            - **summary_proj_to_labels** (`bool`) -- If `True`, the projection outputs to `config.num_labels` classes
-              (otherwise to `config.hidden_size`).
-            - **summary_activation** (`Optional[str]`) -- Set to `"tanh"` to add a tanh activation to the output,
-              another string or `None` will add no activation.
-            - **summary_first_dropout** (`float`) -- Optional dropout probability before the projection and activation.
-            - **summary_last_dropout** (`float`)-- Optional dropout probability after the projection and activation.
-    """
+#     # @replace_return_docstrings(output_type=SquadHeadOutput, config_class=PretrainedConfig)
+#     def forward(
+#         self,
+#         hidden_states: torch.FloatTensor,
+#         start_positions: Optional[torch.LongTensor] = None,
+#         end_positions: Optional[torch.LongTensor] = None,
+#         cls_index: Optional[torch.LongTensor] = None,
+#         is_impossible: Optional[torch.LongTensor] = None,
+#         p_mask: Optional[torch.FloatTensor] = None,
+#         return_dict: bool = False,
+#     ) -> Union[SquadHeadOutput, Tuple[torch.FloatTensor]]:
+#         """
+#         Args:
+#             hidden_states (`torch.FloatTensor` of shape `(batch_size, seq_len, hidden_size)`):
+#                 Final hidden states of the model on the sequence tokens.
+#             start_positions (`torch.LongTensor` of shape `(batch_size,)`, *optional*):
+#                 Positions of the first token for the labeled span.
+#             end_positions (`torch.LongTensor` of shape `(batch_size,)`, *optional*):
+#                 Positions of the last token for the labeled span.
+#             cls_index (`torch.LongTensor` of shape `(batch_size,)`, *optional*):
+#                 Position of the CLS token for each sentence in the batch. If `None`, takes the last token.
+#             is_impossible (`torch.LongTensor` of shape `(batch_size,)`, *optional*):
+#                 Whether the question has a possible answer in the paragraph or not.
+#             p_mask (`torch.FloatTensor` of shape `(batch_size, seq_len)`, *optional*):
+#                 Mask for tokens at invalid position, such as query and special symbols (PAD, SEP, CLS). 1.0 means token
+#                 should be masked.
+#             return_dict (`bool`, *optional*, defaults to `False`):
+#                 Whether or not to return a [`~utils.ModelOutput`] instead of a plain tuple.
 
-    def __init__(self, config: PretrainedConfig):
-        super().__init__()
+#         Returns:
+#         """
+#         start_logits = self.start_logits(hidden_states, p_mask=p_mask)
 
-        self.summary_type = getattr(config, "summary_type", "last")
-        if self.summary_type == "attn":
-            # We should use a standard multi-head attention module with absolute positional embedding for that.
-            # Cf. https://github.com/zihangdai/xlnet/blob/master/modeling.py#L253-L276
-            # We can probably just use the multi-head attention module of PyTorch >=1.1.0
-            raise NotImplementedError
+#         if start_positions is not None and end_positions is not None:
+#             # If we are on multi-GPU, let's remove the dimension added by batch splitting
+#             for x in (start_positions, end_positions, cls_index, is_impossible):
+#                 if x is not None and x.dim() > 1:
+#                     x.squeeze_(-1)
 
-        self.summary = Identity()
-        if hasattr(config, "summary_use_proj") and config.summary_use_proj:
-            if hasattr(config, "summary_proj_to_labels") and config.summary_proj_to_labels and config.num_labels > 0:
-                num_classes = config.num_labels
-            else:
-                num_classes = config.hidden_size
-            self.summary = nn.Linear(config.hidden_size, num_classes)
+#             # during training, compute the end logits based on the ground truth of the start position
+#             end_logits = self.end_logits(hidden_states, start_positions=start_positions, p_mask=p_mask)
 
-        activation_string = getattr(config, "summary_activation", None)
-        self.activation: Callable = get_activation(activation_string) if activation_string else Identity()
+#             loss_fct = CrossEntropyLoss()
+#             start_loss = loss_fct(start_logits, start_positions)
+#             end_loss = loss_fct(end_logits, end_positions)
+#             total_loss = (start_loss + end_loss) / 2
 
-        self.first_dropout = Identity()
-        if hasattr(config, "summary_first_dropout") and config.summary_first_dropout > 0:
-            self.first_dropout = nn.Dropout(config.summary_first_dropout)
+#             if cls_index is not None and is_impossible is not None:
+#                 # Predict answerability from the representation of CLS and START
+#                 cls_logits = self.answer_class(hidden_states, start_positions=start_positions, cls_index=cls_index)
+#                 loss_fct_cls = nn.BCEWithLogitsLoss()
+#                 cls_loss = loss_fct_cls(cls_logits, is_impossible)
 
-        self.last_dropout = Identity()
-        if hasattr(config, "summary_last_dropout") and config.summary_last_dropout > 0:
-            self.last_dropout = nn.Dropout(config.summary_last_dropout)
+#                 # note(zhiliny): by default multiply the loss by 0.5 so that the scale is comparable to start_loss and end_loss
+#                 total_loss += cls_loss * 0.5
 
-    def forward(
-        self, hidden_states: torch.FloatTensor, cls_index: Optional[torch.LongTensor] = None
-    ) -> torch.FloatTensor:
-        """
-        Compute a single vector summary of a sequence hidden states.
+#             return SquadHeadOutput(loss=total_loss) if return_dict else (total_loss,)
 
-        Args:
-            hidden_states (`torch.FloatTensor` of shape `[batch_size, seq_len, hidden_size]`):
-                The hidden states of the last layer.
-            cls_index (`torch.LongTensor` of shape `[batch_size]` or `[batch_size, ...]` where ... are optional leading dimensions of `hidden_states`, *optional*):
-                Used if `summary_type == "cls_index"` and takes the last token of the sequence as classification token.
+#         else:
+#             # during inference, compute the end logits based on beam search
+#             bsz, slen, hsz = hidden_states.size()
+#             start_log_probs = nn.functional.softmax(start_logits, dim=-1)  # shape (bsz, slen)
 
-        Returns:
-            `torch.FloatTensor`: The summary of the sequence hidden states.
-        """
-        if self.summary_type == "last":
-            output = hidden_states[:, -1]
-        elif self.summary_type == "first":
-            output = hidden_states[:, 0]
-        elif self.summary_type == "mean":
-            output = hidden_states.mean(dim=1)
-        elif self.summary_type == "cls_index":
-            if cls_index is None:
-                cls_index = torch.full_like(
-                    hidden_states[..., :1, :],
-                    hidden_states.shape[-2] - 1,
-                    dtype=torch.long,
-                )
-            else:
-                cls_index = cls_index.unsqueeze(-1).unsqueeze(-1)
-                cls_index = cls_index.expand((-1,) * (cls_index.dim() - 1) + (hidden_states.size(-1),))
-            # shape of cls_index: (bsz, XX, 1, hidden_size) where XX are optional leading dim of hidden_states
-            output = hidden_states.gather(-2, cls_index).squeeze(-2)  # shape (bsz, XX, hidden_size)
-        elif self.summary_type == "attn":
-            raise NotImplementedError
+#             start_top_log_probs, start_top_index = torch.topk(
+#                 start_log_probs, self.start_n_top, dim=-1
+#             )  # shape (bsz, start_n_top)
+#             start_top_index_exp = start_top_index.unsqueeze(-1).expand(-1, -1, hsz)  # shape (bsz, start_n_top, hsz)
+#             start_states = torch.gather(hidden_states, -2, start_top_index_exp)  # shape (bsz, start_n_top, hsz)
+#             start_states = start_states.unsqueeze(1).expand(-1, slen, -1, -1)  # shape (bsz, slen, start_n_top, hsz)
 
-        output = self.first_dropout(output)
-        output = self.summary(output)
-        output = self.activation(output)
-        output = self.last_dropout(output)
+#             hidden_states_expanded = hidden_states.unsqueeze(2).expand_as(
+#                 start_states
+#             )  # shape (bsz, slen, start_n_top, hsz)
+#             p_mask = p_mask.unsqueeze(-1) if p_mask is not None else None
+#             end_logits = self.end_logits(hidden_states_expanded, start_states=start_states, p_mask=p_mask)
+#             end_log_probs = nn.functional.softmax(end_logits, dim=1)  # shape (bsz, slen, start_n_top)
 
-        return output
+#             end_top_log_probs, end_top_index = torch.topk(
+#                 end_log_probs, self.end_n_top, dim=1
+#             )  # shape (bsz, end_n_top, start_n_top)
+#             end_top_log_probs = end_top_log_probs.view(-1, self.start_n_top * self.end_n_top)
+#             end_top_index = end_top_index.view(-1, self.start_n_top * self.end_n_top)
+
+#             start_states = torch.einsum("blh,bl->bh", hidden_states, start_log_probs)
+#             cls_logits = self.answer_class(hidden_states, start_states=start_states, cls_index=cls_index)
+
+#             if not return_dict:
+#                 return (start_top_log_probs, start_top_index, end_top_log_probs, end_top_index, cls_logits)
+#             else:
+#                 return SquadHeadOutput(
+#                     start_top_log_probs=start_top_log_probs,
+#                     start_top_index=start_top_index,
+#                     end_top_log_probs=end_top_log_probs,
+#                     end_top_index=end_top_index,
+#                     cls_logits=cls_logits,
+#                 )
+
+
+# class SequenceSummary(nn.Module):
+#     r"""
+#     Compute a single vector summary of a sequence hidden states.
+
+#     Args:
+#         config ([`PretrainedConfig`]):
+#             The config used by the model. Relevant arguments in the config class of the model are (refer to the actual
+#             config class of your model for the default values it uses):
+
+#             - **summary_type** (`str`) -- The method to use to make this summary. Accepted values are:
+
+#                 - `"last"` -- Take the last token hidden state (like XLNet)
+#                 - `"first"` -- Take the first token hidden state (like Bert)
+#                 - `"mean"` -- Take the mean of all tokens hidden states
+#                 - `"cls_index"` -- Supply a Tensor of classification token position (GPT/GPT-2)
+#                 - `"attn"` -- Not implemented now, use multi-head attention
+
+#             - **summary_use_proj** (`bool`) -- Add a projection after the vector extraction.
+#             - **summary_proj_to_labels** (`bool`) -- If `True`, the projection outputs to `config.num_labels` classes
+#               (otherwise to `config.hidden_size`).
+#             - **summary_activation** (`Optional[str]`) -- Set to `"tanh"` to add a tanh activation to the output,
+#               another string or `None` will add no activation.
+#             - **summary_first_dropout** (`float`) -- Optional dropout probability before the projection and activation.
+#             - **summary_last_dropout** (`float`)-- Optional dropout probability after the projection and activation.
+#     """
+
+#     def __init__(self, config: PretrainedConfig):
+#         super().__init__()
+
+#         self.summary_type = getattr(config, "summary_type", "last")
+#         if self.summary_type == "attn":
+#             # We should use a standard multi-head attention module with absolute positional embedding for that.
+#             # Cf. https://github.com/zihangdai/xlnet/blob/master/modeling.py#L253-L276
+#             # We can probably just use the multi-head attention module of PyTorch >=1.1.0
+#             raise NotImplementedError
+
+#         self.summary = Identity()
+#         if hasattr(config, "summary_use_proj") and config.summary_use_proj:
+#             if hasattr(config, "summary_proj_to_labels") and config.summary_proj_to_labels and config.num_labels > 0:
+#                 num_classes = config.num_labels
+#             else:
+#                 num_classes = config.hidden_size
+#             self.summary = nn.Linear(config.hidden_size, num_classes)
+
+#         activation_string = getattr(config, "summary_activation", None)
+#         self.activation: Callable = get_activation(activation_string) if activation_string else Identity()
+
+#         self.first_dropout = Identity()
+#         if hasattr(config, "summary_first_dropout") and config.summary_first_dropout > 0:
+#             self.first_dropout = nn.Dropout(config.summary_first_dropout)
+
+#         self.last_dropout = Identity()
+#         if hasattr(config, "summary_last_dropout") and config.summary_last_dropout > 0:
+#             self.last_dropout = nn.Dropout(config.summary_last_dropout)
+
+#     def forward(
+#         self, hidden_states: torch.FloatTensor, cls_index: Optional[torch.LongTensor] = None
+#     ) -> torch.FloatTensor:
+#         """
+#         Compute a single vector summary of a sequence hidden states.
+
+#         Args:
+#             hidden_states (`torch.FloatTensor` of shape `[batch_size, seq_len, hidden_size]`):
+#                 The hidden states of the last layer.
+#             cls_index (`torch.LongTensor` of shape `[batch_size]` or `[batch_size, ...]` where ... are optional leading dimensions of `hidden_states`, *optional*):
+#                 Used if `summary_type == "cls_index"` and takes the last token of the sequence as classification token.
+
+#         Returns:
+#             `torch.FloatTensor`: The summary of the sequence hidden states.
+#         """
+#         if self.summary_type == "last":
+#             output = hidden_states[:, -1]
+#         elif self.summary_type == "first":
+#             output = hidden_states[:, 0]
+#         elif self.summary_type == "mean":
+#             output = hidden_states.mean(dim=1)
+#         elif self.summary_type == "cls_index":
+#             if cls_index is None:
+#                 cls_index = torch.full_like(
+#                     hidden_states[..., :1, :],
+#                     hidden_states.shape[-2] - 1,
+#                     dtype=torch.long,
+#                 )
+#             else:
+#                 cls_index = cls_index.unsqueeze(-1).unsqueeze(-1)
+#                 cls_index = cls_index.expand((-1,) * (cls_index.dim() - 1) + (hidden_states.size(-1),))
+#             # shape of cls_index: (bsz, XX, 1, hidden_size) where XX are optional leading dim of hidden_states
+#             output = hidden_states.gather(-2, cls_index).squeeze(-2)  # shape (bsz, XX, hidden_size)
+#         elif self.summary_type == "attn":
+#             raise NotImplementedError
+
+#         output = self.first_dropout(output)
+#         output = self.summary(output)
+#         output = self.activation(output)
+#         output = self.last_dropout(output)
+
+#         return output
 
 
 def unwrap_model(model: nn.Module) -> nn.Module:
