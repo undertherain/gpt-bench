@@ -50,17 +50,6 @@ def no_init_weights(_enable=True):
         _init_weights = old_init_weights
 
 
-def set_initialized_submodules(model, state_dict_keys):
-    """
-    Sets the `_is_hf_initialized` flag in all submodules of a given model when all its weights are in the loaded state
-    dict.
-    """
-    for module_name, module in model.named_modules():
-        loaded_keys = [k.replace(f"{module_name}.", "") for k in state_dict_keys if k.startswith(f"{module_name}.")]
-        if len(set(module.state_dict().keys()) - set(loaded_keys)) == 0:
-            module._is_hf_initialized = True
-
-
 class PreTrainedModel(nn.Module):
     r"""
     Base class for all models.
@@ -111,20 +100,6 @@ class PreTrainedModel(nn.Module):
 
     is_parallelizable = False
     supports_gradient_checkpointing = False
-
-    @property
-    def dummy_inputs(self) -> Dict[str, torch.Tensor]:
-        """
-        `Dict[str, torch.Tensor]`: Dummy inputs to do a forward pass in the network.
-        """
-        return {"input_ids": torch.tensor(DUMMY_INPUTS)}
-
-    @property
-    def framework(self) -> str:
-        """
-        :str: Identifies that this is a PyTorch model.
-        """
-        return "pt"
 
     def __init__(self, config: PretrainedConfig, *inputs, **kwargs):
         super().__init__()
