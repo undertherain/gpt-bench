@@ -71,15 +71,14 @@ model can be post-processed after being instanciated in any way that
 - allows model to be trained in the same training loop (i.e. opimizer.step being called from Python interpreter)
 - done withing the same script
 
-any additional set-up steps to PyTorch framework etc. E.g. `torch.backends.my_backend.enabled = True`
+Necessary configuration can be applied to PyTorch framework etc. E.g. calling something like `torch.backends.my_backend.enabled = True`
 
-ADDING PRECISION
-point to which lines of code can be modified
+New numeric precision can be added.
+
+All modification should be contained within `set_environment` and `set_model_and_data` methods.
 
 ## Reporting changes:
 
-submit modified code along with results
-PR to a corresponding branch,
-contact if any isses though githhub issues
+Submit modified code along with results. 
 
-for questions contact RCCS HPAIS team.
+For questions contact RIKEN CCS HPAIS team.
