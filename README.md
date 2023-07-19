@@ -17,6 +17,9 @@ We expect that all operations are performed correctly in corresponding numeric f
 
 # Dependencies
 
+The benchmark requires Python interpreter verion 3.8 or above.
+
+The only Python module needed outside of those contained in standard Python distribution is `torch`.
 
 # Running
 
