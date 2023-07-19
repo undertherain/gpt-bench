@@ -25,7 +25,7 @@ from torch import nn
 from .configuration_utils import PretrainedConfig
 from .pytorch_utils import (Conv1D, apply_chunking_to_forward,  # noqa: F401
                             find_pruneable_heads_and_indices,
-                            id_tensor_storage, prune_conv1d_layer, prune_layer,
+                            prune_conv1d_layer, prune_layer,
                             prune_linear_layer)
 
 logger = logging.getLogger(__name__)

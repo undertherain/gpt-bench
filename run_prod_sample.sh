@@ -1,4 +1,4 @@
 python3 -m bench \
-	--batch-size=4 \
-	--precision=fp32 \
-	--device=cuda
+	--batch-size=1 \
+	--precision=fp16 \
+	--device=cpu
