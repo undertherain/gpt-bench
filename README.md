@@ -19,7 +19,7 @@ todo dependencies
 # Correctness
 
 In order to be able to execute in relatively short time, the benchmark does not check for convergence to a given fidelity metric etc. 
-We expect that all operations are performed correctly in corresponding numeric formats, according to model definition.
+We expect that all operations are performed correctly in corresponding numeric formats, according to the model definition.
 
 # Running
 
@@ -32,11 +32,11 @@ python3 -m bench \
     --device=XX
 ```    
 
-Batch size can be set to any integer number in order to accomodate devices with different amounts of memory. User can report the best throughput achieved under any batch size. 
-NOTE THAT THE ONY WAY TO adhust amount of work is BS
+Batch size can be set to any integer number in order to accomodate devices with different amounts of memory. The user can report the best throughput achieved under any batch size. 
+NOTE THAT THE ONY ACCETABLE WAY TO adjust amount of work is by changing the batch size.
 
-Precision can be one of "FP32", "TF32", "FP16", "BF16".
-User should report all supported precions along with achieved throughput number. 
+Precisions can be one of "FP32", "TF32", "FP16", "BF16".
+The user should report all supported precisions along with the achieved throughput number for each precision. 
 If a combination of several numeric formats is used, e.g. FP32 and accumulation is done in FP16 in hardware - the whole run is considrered to be done in a precision with the lowest number of bits.  
 
 Device can be any string that can be interpreted in `torch.to(device)` call.
@@ -56,20 +56,21 @@ Additionally, for debugging purpose, the fillowing options can be specified:
 
 # Modification
 
-We realize that novel harware can require specific modification to benchmark code. The changes shold be submitted along with bechmark results, and satisfy the following criteria:
+We realize that novel hardware can require specific modification to the benchmark code. The changes shold be submitted along with benchmark results, and satisfy the following criteria:
 
 ## What can not be changed:
 
- - the model should be run from Python interpreter.
- - model definition should stay as it is.
- - optimizer should be `AdamW` imported from `torch.optim` module.
+ - the model should be run from the Python interpreter.
+ - The model definition should stay as it is.
+ - The optimizer should be `AdamW` imported from `torch.optim` module.
 
 ## What can be changed:
 
-model can be post-processed after being instanciated in any way that 
-- preserves original fuctionality
-- allows model to be trained in the same training loop (i.e. opimizer.step being called from Python interpreter)
-- done withing the same script
+- The model can be post-processed after being instantiated in any way that: 
+    - Preserves the original fuctionality.
+    - Allows the model to be trained in the same training loop (i.e. `opimizer.step` being called from Python interpreter).
+    - Done within the same script.
+- Any additional set-up steps to PyTorch framework etc. E.g. `torch.backends.my_backend.enabled = True`
 
 Necessary configuration can be applied to PyTorch framework etc. E.g. calling something like `torch.backends.my_backend.enabled = True`
 
@@ -82,3 +83,7 @@ All modification should be contained within `set_environment` and `set_model_and
 Submit modified code along with results. 
 
 For questions contact RIKEN CCS HPAIS team.
+
+Submit modified code along with results
+
+For questions contact RIKEN CCS [HPAIS Team](https://www.r-ccs.riken.jp/en/research/labs/hpaisrt/)
