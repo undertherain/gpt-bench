@@ -45,13 +45,15 @@ def set_opimizer(net):
     return optimizer
 
 
+def set_environment():
+    # To the extend possible, do all environment setting operations here
+    pass
+
+
 class Trainer:
     def __init__(self, net, config):
         self.net = net
         self.config = config
-
-    def set_backedn(self):
-        pass
 
     def set_precision(self):
         prec = self.config.precision.lower()
@@ -65,12 +67,19 @@ class Trainer:
             self.net.half()
         elif prec == "bf16":
             self.net.bfloat16()
+        # Add support for new numeric formats here if needed
         else:
             raise RuntimeError(f"can't set precision to {self.config.precision}")
+
+    def post_process_model(self):
+        # To the extend possible implement all post-processing of the model within this method.
+        pass
 
     def train(self):
         data = get_train_data(self.config)
         self.set_precision()
+        self.post_process_model()
+        self.net.to(self.config.device)
         # TODO: specify cnt repeats so that at least N samples are seen
         cnt_batches = 50
         optimizer = set_opimizer(self.net)
@@ -129,10 +138,9 @@ def main():
     config.num_attention_heads = args.num_attention_heads
     #print(vars(config)["num_attention_heads"])
     check_defaults(vars(config), vars(parser.parse_args([])))
+    set_environment()
     net = LlamaForCausalLM(config)
     print("model created")
-    net.to(config.device)
-    print("model set to device")
     describe_model(net)
     trainer = Trainer(net, config)
     trainer.train()
