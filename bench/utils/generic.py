@@ -145,82 +145,6 @@ def _is_torch_dtype(x):
     return isinstance(x, torch.dtype)
 
 
-def is_torch_dtype(x):
-    """
-    Tests if `x` is a torch dtype or not. Safe to call even if torch is not installed.
-    """
-    return False if not is_torch_available() else _is_torch_dtype(x)
-
-
-
-def _is_tf_symbolic_tensor(x):
-    import tensorflow as tf
-
-    # the `is_symbolic_tensor` predicate is only available starting with TF 2.14
-    if hasattr(tf, "is_symbolic_tensor"):
-        return tf.is_symbolic_tensor(x)
-    return type(x) == tf.Tensor
-
-
-def is_tf_symbolic_tensor(x):
-    """
-    Tests if `x` is a tensorflow symbolic tensor or not (ie. not eager). Safe to call even if tensorflow is not
-    installed.
-    """
-    return False if not is_tf_available() else _is_tf_symbolic_tensor(x)
-
-
-def _is_jax(x):
-    import jax.numpy as jnp  # noqa: F811
-
-    return isinstance(x, jnp.ndarray)
-
-
-def is_jax_tensor(x):
-    """
-    Tests if `x` is a Jax tensor or not. Safe to call even if jax is not installed.
-    """
-    return False if not is_flax_available() else _is_jax(x)
-
-
-def to_py_obj(obj):
-    """
-    Convert a TensorFlow tensor, PyTorch tensor, Numpy array or python list to a python list.
-    """
-    if isinstance(obj, (dict, UserDict)):
-        return {k: to_py_obj(v) for k, v in obj.items()}
-    elif isinstance(obj, (list, tuple)):
-        return [to_py_obj(o) for o in obj]
-    elif is_tf_tensor(obj):
-        return obj.numpy().tolist()
-    elif is_torch_tensor(obj):
-        return obj.detach().cpu().tolist()
-    elif is_jax_tensor(obj):
-        return np.asarray(obj).tolist()
-    elif isinstance(obj, (np.ndarray, np.number)):  # tolist also works on 0d np arrays
-        return obj.tolist()
-    else:
-        return obj
-
-
-def to_numpy(obj):
-    """
-    Convert a TensorFlow tensor, PyTorch tensor, Numpy array or python list to a Numpy array.
-    """
-    if isinstance(obj, (dict, UserDict)):
-        return {k: to_numpy(v) for k, v in obj.items()}
-    elif isinstance(obj, (list, tuple)):
-        return np.array(obj)
-    elif is_tf_tensor(obj):
-        return obj.numpy()
-    elif is_torch_tensor(obj):
-        return obj.detach().cpu().numpy()
-    elif is_jax_tensor(obj):
-        return np.asarray(obj)
-    else:
-        return obj
-
-
 class ModelOutput(OrderedDict):
     """
     Base class for all model outputs as dataclass. Has a `__getitem__` that allows indexing by integer or slice (like a
@@ -378,28 +302,6 @@ class ContextManagers:
         self.stack.__exit__(*args, **kwargs)
 
 
-def can_return_loss(model_class):
-    """
-    Check if a given model can return loss.
-
-    Args:
-        model_class (`type`): The class of the model.
-    """
-    framework = infer_framework(model_class)
-    if framework == "tf":
-        signature = inspect.signature(model_class.call)  # TensorFlow models
-    elif framework == "pt":
-        signature = inspect.signature(model_class.forward)  # PyTorch models
-    else:
-        signature = inspect.signature(model_class.__call__)  # Flax models
-
-    for p in signature.parameters:
-        if p == "return_loss" and signature.parameters[p].default is True:
-            return True
-
-    return False
-
-
 def find_labels(model_class):
     """
     Find the labels used by a given model.
@@ -436,109 +338,6 @@ def flatten_dict(d: MutableMapping, parent_key: str = "", delimiter: str = "."):
     return dict(_flatten_dict(d, parent_key, delimiter))
 
 
-@contextmanager
-def working_or_temp_dir(working_dir, use_temp_dir: bool = False):
-    if use_temp_dir:
-        with tempfile.TemporaryDirectory() as tmp_dir:
-            yield tmp_dir
-    else:
-        yield working_dir
-
-
-def transpose(array, axes=None):
-    """
-    Framework-agnostic version of `numpy.transpose` that will work on torch/TensorFlow/Jax tensors as well as NumPy
-    arrays.
-    """
-    if is_numpy_array(array):
-        return np.transpose(array, axes=axes)
-    elif is_torch_tensor(array):
-        return array.T if axes is None else array.permute(*axes)
-    elif is_tf_tensor(array):
-        import tensorflow as tf
-
-        return tf.transpose(array, perm=axes)
-    elif is_jax_tensor(array):
-        return jnp.transpose(array, axes=axes)
-    else:
-        raise ValueError(f"Type not supported for transpose: {type(array)}.")
-
-
-def reshape(array, newshape):
-    """
-    Framework-agnostic version of `numpy.reshape` that will work on torch/TensorFlow/Jax tensors as well as NumPy
-    arrays.
-    """
-    if is_numpy_array(array):
-        return np.reshape(array, newshape)
-    elif is_torch_tensor(array):
-        return array.reshape(*newshape)
-    elif is_tf_tensor(array):
-        import tensorflow as tf
-
-        return tf.reshape(array, newshape)
-    elif is_jax_tensor(array):
-        return jnp.reshape(array, newshape)
-    else:
-        raise ValueError(f"Type not supported for reshape: {type(array)}.")
-
-
-def squeeze(array, axis=None):
-    """
-    Framework-agnostic version of `numpy.squeeze` that will work on torch/TensorFlow/Jax tensors as well as NumPy
-    arrays.
-    """
-    if is_numpy_array(array):
-        return np.squeeze(array, axis=axis)
-    elif is_torch_tensor(array):
-        return array.squeeze() if axis is None else array.squeeze(dim=axis)
-    elif is_tf_tensor(array):
-        import tensorflow as tf
-
-        return tf.squeeze(array, axis=axis)
-    elif is_jax_tensor(array):
-        return jnp.squeeze(array, axis=axis)
-    else:
-        raise ValueError(f"Type not supported for squeeze: {type(array)}.")
-
-
-def expand_dims(array, axis):
-    """
-    Framework-agnostic version of `numpy.expand_dims` that will work on torch/TensorFlow/Jax tensors as well as NumPy
-    arrays.
-    """
-    if is_numpy_array(array):
-        return np.expand_dims(array, axis)
-    elif is_torch_tensor(array):
-        return array.unsqueeze(dim=axis)
-    elif is_tf_tensor(array):
-        import tensorflow as tf
-
-        return tf.expand_dims(array, axis=axis)
-    elif is_jax_tensor(array):
-        return jnp.expand_dims(array, axis=axis)
-    else:
-        raise ValueError(f"Type not supported for expand_dims: {type(array)}.")
-
-
-def tensor_size(array):
-    """
-    Framework-agnostic version of `numpy.size` that will work on torch/TensorFlow/Jax tensors as well as NumPy arrays.
-    """
-    if is_numpy_array(array):
-        return np.size(array)
-    elif is_torch_tensor(array):
-        return array.numel()
-    elif is_tf_tensor(array):
-        import tensorflow as tf
-
-        return tf.size(array)
-    elif is_jax_tensor(array):
-        return array.size
-    else:
-        raise ValueError(f"Type not supported for expand_dims: {type(array)}.")
-
-
 def add_model_info_to_auto_map(auto_map, repo_id):
     """
     Adds the information of the repo_id to a given auto map.
@@ -550,21 +349,3 @@ def add_model_info_to_auto_map(auto_map, repo_id):
             auto_map[key] = f"{repo_id}--{value}"
 
     return auto_map
-
-
-def infer_framework(model_class):
-    """
-    Infers the framework of a given model without using isinstance(), because we cannot guarantee that the relevant
-    classes are imported or available.
-    """
-    for base_class in inspect.getmro(model_class):
-        module = base_class.__module__
-        name = base_class.__name__
-        if module.startswith("tensorflow") or module.startswith("keras") or name == "TFPreTrainedModel":
-            return "tf"
-        elif module.startswith("torch") or name == "PreTrainedModel":
-            return "pt"
-        elif module.startswith("flax") or module.startswith("jax") or name == "FlaxPreTrainedModel":
-            return "flax"
-    else:
-        raise TypeError(f"Could not infer framework from class {model_class}.")
