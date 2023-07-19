@@ -17,22 +17,18 @@ import logging
 import os
 import warnings
 from contextlib import contextmanager
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import torch
 from torch import Tensor, nn
-from torch.nn import CrossEntropyLoss, Identity
 
-from .activations import get_activation
 from .configuration_utils import PretrainedConfig
 from .pytorch_utils import (Conv1D, apply_chunking_to_forward,  # noqa: F401
                             find_pruneable_heads_and_indices,
                             id_tensor_storage, prune_conv1d_layer, prune_layer,
                             prune_linear_layer)
-from .utils import ModelOutput
-from .utils.import_utils import (ENV_VARS_TRUE_VALUES, importlib_metadata,
-                                 is_sagemaker_mp_enabled)
-from .utils.versions import require_version_core
+
+# from .utils.import_utils import ENV_VARS_TRUE_VALUES
 
 XLA_USE_BF16 = os.environ.get("XLA_USE_BF16", "0").upper()
 XLA_DOWNCAST_BF16 = os.environ.get("XLA_DOWNCAST_BF16", "0").upper()
