@@ -44,8 +44,7 @@ from .generic import (ContextManagers, ExplicitEnum, ModelOutput,
 #                   is_offline_mode, is_remote_url, move_cache,
 #                   send_example_telemetry, try_to_load_from_cache)
 from .import_utils import (ENV_VARS_TRUE_AND_AUTO_VALUES, ENV_VARS_TRUE_VALUES,
-                           TORCH_FX_REQUIRED_VERSION, USE_JAX, USE_TF,
-                           USE_TORCH, DummyObject,
+                           TORCH_FX_REQUIRED_VERSION, USE_TORCH, DummyObject,
                            OptionalDependencyNotAvailable, _LazyModule,
                            ccl_version, direct_transformers_import,
                            get_torch_version, is_accelerate_available,
@@ -53,18 +52,18 @@ from .import_utils import (ENV_VARS_TRUE_AND_AUTO_VALUES, ENV_VARS_TRUE_VALUES,
                            is_bs4_available, is_coloredlogs_available,
                            is_cython_available, is_datasets_available,
                            is_decord_available, is_detectron2_available,
-                           is_faiss_available, is_flax_available,
-                           is_ftfy_available, is_in_notebook,
-                           is_ipex_available, is_jieba_available,
-                           is_jumanpp_available, is_kenlm_available,
-                           is_keras_nlp_available, is_librosa_available,
-                           is_natten_available, is_ninja_available,
-                           is_onnx_available, is_openai_available,
-                           is_optimum_available, is_pandas_available,
-                           is_peft_available, is_phonemizer_available,
-                           is_protobuf_available, is_psutil_available,
-                           is_py3nvml_available, is_pyctcdecode_available,
-                           is_pytesseract_available, is_pytest_available,
+                           is_faiss_available, is_ftfy_available,
+                           is_in_notebook, is_ipex_available,
+                           is_jieba_available, is_jumanpp_available,
+                           is_kenlm_available, is_keras_nlp_available,
+                           is_librosa_available, is_natten_available,
+                           is_ninja_available, is_onnx_available,
+                           is_openai_available, is_optimum_available,
+                           is_pandas_available, is_peft_available,
+                           is_phonemizer_available, is_protobuf_available,
+                           is_psutil_available, is_py3nvml_available,
+                           is_pyctcdecode_available, is_pytesseract_available,
+                           is_pytest_available,
                            is_pytorch_quantization_available,
                            is_rjieba_available, is_sacremoses_available,
                            is_safetensors_available, is_sagemaker_dp_enabled,
@@ -73,8 +72,7 @@ from .import_utils import (ENV_VARS_TRUE_AND_AUTO_VALUES, ENV_VARS_TRUE_VALUES,
                            is_soundfile_availble, is_spacy_available,
                            is_speech_available, is_sudachi_available,
                            is_tensorflow_probability_available,
-                           is_tensorflow_text_available, is_tf2onnx_available,
-                           is_tf_available, is_timm_available,
+                           is_tensorflow_text_available, is_timm_available,
                            is_tokenizers_available, is_torch_available,
                            is_torch_bf16_available,
                            is_torch_bf16_cpu_available,
@@ -93,11 +91,11 @@ WEIGHTS_NAME = "pytorch_model.bin"
 WEIGHTS_INDEX_NAME = "pytorch_model.bin.index.json"
 ADAPTER_WEIGHTS_NAME = "adapter_model.bin"
 ADAPTER_SAFE_WEIGHTS_NAME = "adapter_model.safetensors"
-TF2_WEIGHTS_NAME = "tf_model.h5"
-TF2_WEIGHTS_INDEX_NAME = "tf_model.h5.index.json"
-TF_WEIGHTS_NAME = "model.ckpt"
-FLAX_WEIGHTS_NAME = "flax_model.msgpack"
-FLAX_WEIGHTS_INDEX_NAME = "flax_model.msgpack.index.json"
+#TF2_WEIGHTS_NAME = "tf_model.h5"
+#TF2_WEIGHTS_INDEX_NAME = "tf_model.h5.index.json"
+#TF_WEIGHTS_NAME = "model.ckpt"
+#FLAX_WEIGHTS_NAME = "flax_model.msgpack"
+#FLAX_WEIGHTS_INDEX_NAME = "flax_model.msgpack.index.json"
 SAFE_WEIGHTS_NAME = "model.safetensors"
 SAFE_WEIGHTS_INDEX_NAME = "model.safetensors.index.json"
 CONFIG_NAME = "config.json"

@@ -26,11 +26,10 @@ from typing import Any, ContextManager, List, Tuple
 
 import numpy as np
 
-from .import_utils import is_flax_available, is_tf_available, is_torch_available, is_torch_fx_proxy
+from .import_utils import is_torch_available, is_torch_fx_proxy
 
-
-if is_flax_available():
-    import jax.numpy as jnp
+# if is_flax_available():
+#     import jax.numpy as jnp
 
 
 class cached_property(property):

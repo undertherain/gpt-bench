@@ -57,11 +57,11 @@ def _is_package_available(pkg_name: str, return_version: bool = False) -> Union[
 ENV_VARS_TRUE_VALUES = {"1", "ON", "YES", "TRUE"}
 ENV_VARS_TRUE_AND_AUTO_VALUES = ENV_VARS_TRUE_VALUES.union({"AUTO"})
 
-USE_TF = os.environ.get("USE_TF", "AUTO").upper()
+# USE_TF = os.environ.get("USE_TF", "AUTO").upper()
 USE_TORCH = os.environ.get("USE_TORCH", "AUTO").upper()
-USE_JAX = os.environ.get("USE_FLAX", "AUTO").upper()
+# USE_JAX = os.environ.get("USE_FLAX", "AUTO").upper()
 
-FORCE_TF_AVAILABLE = os.environ.get("FORCE_TF_AVAILABLE", "AUTO").upper()
+# FORCE_TF_AVAILABLE = os.environ.get("FORCE_TF_AVAILABLE", "AUTO").upper()
 
 # This is the version of torch required to run torch.fx features and torch.onnx with dictionary inputs.
 TORCH_FX_REQUIRED_VERSION = version.parse("1.10")
@@ -133,53 +133,53 @@ _torchvision_available = _is_package_available("torchvision")
 
 _torch_version = "N/A"
 _torch_available = False
-if USE_TORCH in ENV_VARS_TRUE_AND_AUTO_VALUES and USE_TF not in ENV_VARS_TRUE_VALUES:
+if USE_TORCH in ENV_VARS_TRUE_AND_AUTO_VALUES:
     _torch_available, _torch_version = _is_package_available("torch", return_version=True)
 else:
     logger.info("Disabling PyTorch because USE_TF is set")
     _torch_available = False
 
 
-_tf_version = "N/A"
-_tf_available = False
-if FORCE_TF_AVAILABLE in ENV_VARS_TRUE_VALUES:
-    _tf_available = True
-else:
-    if USE_TF in ENV_VARS_TRUE_AND_AUTO_VALUES and USE_TORCH not in ENV_VARS_TRUE_VALUES:
-        # Note: _is_package_available("tensorflow") fails for tensorflow-cpu. Please test any changes to the line below
-        # with tensorflow-cpu to make sure it still works!
-        _tf_available = importlib.util.find_spec("tensorflow") is not None
-        if _tf_available:
-            candidates = (
-                "tensorflow",
-                "tensorflow-cpu",
-                "tensorflow-gpu",
-                "tf-nightly",
-                "tf-nightly-cpu",
-                "tf-nightly-gpu",
-                "intel-tensorflow",
-                "intel-tensorflow-avx512",
-                "tensorflow-rocm",
-                "tensorflow-macos",
-                "tensorflow-aarch64",
-            )
-            _tf_version = None
-            # For the metadata, we have to look for both tensorflow and tensorflow-cpu
-            for pkg in candidates:
-                try:
-                    _tf_version = importlib_metadata.version(pkg)
-                    break
-                except importlib_metadata.PackageNotFoundError:
-                    pass
-            _tf_available = _tf_version is not None
-        if _tf_available:
-            if version.parse(_tf_version) < version.parse("2"):
-                logger.info(
-                    f"TensorFlow found but with version {_tf_version}. Transformers requires version 2 minimum."
-                )
-                _tf_available = False
-    else:
-        logger.info("Disabling Tensorflow because USE_TORCH is set")
+# _tf_version = "N/A"
+# _tf_available = False
+# if FORCE_TF_AVAILABLE in ENV_VARS_TRUE_VALUES:
+#     _tf_available = True
+# else:
+#     if USE_TF in ENV_VARS_TRUE_AND_AUTO_VALUES and USE_TORCH not in ENV_VARS_TRUE_VALUES:
+#         # Note: _is_package_available("tensorflow") fails for tensorflow-cpu. Please test any changes to the line below
+#         # with tensorflow-cpu to make sure it still works!
+#         _tf_available = importlib.util.find_spec("tensorflow") is not None
+#         if _tf_available:
+#             candidates = (
+#                 "tensorflow",
+#                 "tensorflow-cpu",
+#                 "tensorflow-gpu",
+#                 "tf-nightly",
+#                 "tf-nightly-cpu",
+#                 "tf-nightly-gpu",
+#                 "intel-tensorflow",
+#                 "intel-tensorflow-avx512",
+#                 "tensorflow-rocm",
+#                 "tensorflow-macos",
+#                 "tensorflow-aarch64",
+#             )
+#             _tf_version = None
+#             # For the metadata, we have to look for both tensorflow and tensorflow-cpu
+#             for pkg in candidates:
+#                 try:
+#                     _tf_version = importlib_metadata.version(pkg)
+#                     break
+#                 except importlib_metadata.PackageNotFoundError:
+#                     pass
+#             _tf_available = _tf_version is not None
+#         if _tf_available:
+#             if version.parse(_tf_version) < version.parse("2"):
+#                 logger.info(
+#                     f"TensorFlow found but with version {_tf_version}. Transformers requires version 2 minimum."
+#                 )
+#                 _tf_available = False
+#     else:
+#         logger.info("Disabling Tensorflow because USE_TORCH is set")
 
 
 ccl_version = "N/A"
@@ -194,16 +194,16 @@ except importlib_metadata.PackageNotFoundError:
     _is_ccl_available = False
 
 
-_flax_available = False
-if USE_JAX in ENV_VARS_TRUE_AND_AUTO_VALUES:
-    _flax_available, _flax_version = _is_package_available("flax", return_version=True)
-    if _flax_available:
-        _jax_available, _jax_version = _is_package_available("jax", return_version=True)
-        if _jax_available:
-            logger.info(f"JAX version {_jax_version}, Flax version {_flax_version} available.")
-        else:
-            _flax_available = _jax_available = False
-            _jax_version = _flax_version = "N/A"
+# _flax_available = False
+# if USE_JAX in ENV_VARS_TRUE_AND_AUTO_VALUES:
+#     _flax_available, _flax_version = _is_package_available("flax", return_version=True)
+#     if _flax_available:
+#         _jax_available, _jax_version = _is_package_available("jax", return_version=True)
+#         if _jax_available:
+#             logger.info(f"JAX version {_jax_version}, Flax version {_flax_version} available.")
+#         else:
+#             _flax_available = _jax_available = False
+#             _jax_version = _flax_version = "N/A"
 
 
 _torch_fx_available = False
@@ -340,8 +340,8 @@ def is_coloredlogs_available():
     return _coloredlogs_available
 
 
-def is_tf2onnx_available():
-    return _tf2onnx_available
+# def is_tf2onnx_available():
+#     return _tf2onnx_available
 
 
 def is_onnx_available():
@@ -352,8 +352,8 @@ def is_openai_available():
     return _openai_available
 
 
-def is_flax_available():
-    return _flax_available
+# def is_flax_available():
+#     return _flax_available
 
 
 def is_ftfy_available():
@@ -958,7 +958,7 @@ BACKENDS_MAPPING = OrderedDict(
         ("datasets", (is_datasets_available, DATASETS_IMPORT_ERROR)),
         ("detectron2", (is_detectron2_available, DETECTRON2_IMPORT_ERROR)),
         ("faiss", (is_faiss_available, FAISS_IMPORT_ERROR)),
-        ("flax", (is_flax_available, FLAX_IMPORT_ERROR)),
+        # ("flax", (is_flax_available, FLAX_IMPORT_ERROR)),
         ("ftfy", (is_ftfy_available, FTFY_IMPORT_ERROR)),
         ("pandas", (is_pandas_available, PANDAS_IMPORT_ERROR)),
         ("phonemizer", (is_phonemizer_available, PHONEMIZER_IMPORT_ERROR)),
