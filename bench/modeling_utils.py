@@ -131,30 +131,6 @@ def get_parameter_dtype(parameter: Union[nn.Module, "ModuleUtilsMixin"]):
     return last_dtype
 
 
-def get_state_dict_float_dtype(state_dict):
-    """
-    Returns the first found floating dtype in `state_dict` or asserts if none were found.
-    """
-    for t in state_dict.values():
-        if t.is_floating_point():
-            return t.dtype
-
-    raise ValueError("couldn't find any floating point dtypes in state_dict")
-
-
-def get_state_dict_dtype(state_dict):
-    """
-    Returns the first found floating dtype in `state_dict` if there is one, otherwise returns the first dtype.
-    """
-    for t in state_dict.values():
-        if t.is_floating_point():
-            return t.dtype
-
-    # if no floating dtype was found return whatever the first dtype is
-    else:
-        return next(state_dict.values()).dtype
-
-
 def set_initialized_submodules(model, state_dict_keys):
     """
     Sets the `_is_hf_initialized` flag in all submodules of a given model when all its weights are in the loaded state
@@ -189,299 +165,290 @@ def find_submodule_and_param_name(model, long_key, start_prefix):
     return submodule, split_key[0]
 
 
-def _add_variant(weights_name: str, variant: Optional[str] = None) -> str:
-    if variant is not None:
-        splits = weights_name.split(".")
-        splits = splits[:-1] + [variant] + splits[-1:]
-        weights_name = ".".join(splits)
+# class ModuleUtilsMixin:
+#     """
+#     A few utilities for `torch.nn.Modules`, to be used as a mixin.
+#     """
 
-    return weights_name
+#     @staticmethod
+#     def _hook_rss_memory_pre_forward(module, *args, **kwargs):
+#         try:
+#             import psutil
+#         except ImportError:
+#             raise ImportError("You need to install psutil (pip install psutil) to use memory tracing.")
 
+#         process = psutil.Process(os.getpid())
+#         mem = process.memory_info()
+#         module.mem_rss_pre_forward = mem.rss
+#         return None
 
-class ModuleUtilsMixin:
-    """
-    A few utilities for `torch.nn.Modules`, to be used as a mixin.
-    """
+#     @staticmethod
+#     def _hook_rss_memory_post_forward(module, *args, **kwargs):
+#         try:
+#             import psutil
+#         except ImportError:
+#             raise ImportError("You need to install psutil (pip install psutil) to use memory tracing.")
 
-    @staticmethod
-    def _hook_rss_memory_pre_forward(module, *args, **kwargs):
-        try:
-            import psutil
-        except ImportError:
-            raise ImportError("You need to install psutil (pip install psutil) to use memory tracing.")
+#         process = psutil.Process(os.getpid())
+#         mem = process.memory_info()
+#         module.mem_rss_post_forward = mem.rss
+#         mem_rss_diff = module.mem_rss_post_forward - module.mem_rss_pre_forward
+#         module.mem_rss_diff = mem_rss_diff + (module.mem_rss_diff if hasattr(module, "mem_rss_diff") else 0)
+#         return None
 
-        process = psutil.Process(os.getpid())
-        mem = process.memory_info()
-        module.mem_rss_pre_forward = mem.rss
-        return None
+#     def add_memory_hooks(self):
+#         """
+#         Add a memory hook before and after each sub-module forward pass to record increase in memory consumption.
 
-    @staticmethod
-    def _hook_rss_memory_post_forward(module, *args, **kwargs):
-        try:
-            import psutil
-        except ImportError:
-            raise ImportError("You need to install psutil (pip install psutil) to use memory tracing.")
+#         Increase in memory consumption is stored in a `mem_rss_diff` attribute for each module and can be reset to zero
+#         with `model.reset_memory_hooks_state()`.
+#         """
+#         for module in self.modules():
+#             module.register_forward_pre_hook(self._hook_rss_memory_pre_forward)
+#             module.register_forward_hook(self._hook_rss_memory_post_forward)
+#         self.reset_memory_hooks_state()
 
-        process = psutil.Process(os.getpid())
-        mem = process.memory_info()
-        module.mem_rss_post_forward = mem.rss
-        mem_rss_diff = module.mem_rss_post_forward - module.mem_rss_pre_forward
-        module.mem_rss_diff = mem_rss_diff + (module.mem_rss_diff if hasattr(module, "mem_rss_diff") else 0)
-        return None
+#     def reset_memory_hooks_state(self):
+#         """
+#         Reset the `mem_rss_diff` attribute of each module (see [`~modeling_utils.ModuleUtilsMixin.add_memory_hooks`]).
+#         """
+#         for module in self.modules():
+#             module.mem_rss_diff = 0
+#             module.mem_rss_post_forward = 0
+#             module.mem_rss_pre_forward = 0
 
-    def add_memory_hooks(self):
-        """
-        Add a memory hook before and after each sub-module forward pass to record increase in memory consumption.
+#     @property
+#     def device(self) -> torch.device:
+#         """
+#         `torch.device`: The device on which the module is (assuming that all the module parameters are on the same
+#         device).
+#         """
+#         return get_parameter_device(self)
 
-        Increase in memory consumption is stored in a `mem_rss_diff` attribute for each module and can be reset to zero
-        with `model.reset_memory_hooks_state()`.
-        """
-        for module in self.modules():
-            module.register_forward_pre_hook(self._hook_rss_memory_pre_forward)
-            module.register_forward_hook(self._hook_rss_memory_post_forward)
-        self.reset_memory_hooks_state()
+#     @property
+#     def dtype(self) -> torch.dtype:
+#         """
+#         `torch.dtype`: The dtype of the module (assuming that all the module parameters have the same dtype).
+#         """
+#         return get_parameter_dtype(self)
 
-    def reset_memory_hooks_state(self):
-        """
-        Reset the `mem_rss_diff` attribute of each module (see [`~modeling_utils.ModuleUtilsMixin.add_memory_hooks`]).
-        """
-        for module in self.modules():
-            module.mem_rss_diff = 0
-            module.mem_rss_post_forward = 0
-            module.mem_rss_pre_forward = 0
+#     def invert_attention_mask(self, encoder_attention_mask: Tensor) -> Tensor:
+#         """
+#         Invert an attention mask (e.g., switches 0. and 1.).
 
-    @property
-    def device(self) -> torch.device:
-        """
-        `torch.device`: The device on which the module is (assuming that all the module parameters are on the same
-        device).
-        """
-        return get_parameter_device(self)
+#         Args:
+#             encoder_attention_mask (`torch.Tensor`): An attention mask.
 
-    @property
-    def dtype(self) -> torch.dtype:
-        """
-        `torch.dtype`: The dtype of the module (assuming that all the module parameters have the same dtype).
-        """
-        return get_parameter_dtype(self)
+#         Returns:
+#             `torch.Tensor`: The inverted attention mask.
+#         """
+#         if encoder_attention_mask.dim() == 3:
+#             encoder_extended_attention_mask = encoder_attention_mask[:, None, :, :]
+#         if encoder_attention_mask.dim() == 2:
+#             encoder_extended_attention_mask = encoder_attention_mask[:, None, None, :]
+#         # T5 has a mask that can compare sequence ids, we can simulate this here with this transposition
+#         # Cf. https://github.com/tensorflow/mesh/blob/8d2465e9bc93129b913b5ccc6a59aa97abd96ec6/mesh_tensorflow
+#         # /transformer/transformer_layers.py#L270
+#         # encoder_extended_attention_mask = (encoder_extended_attention_mask ==
+#         # encoder_extended_attention_mask.transpose(-1, -2))
+#         encoder_extended_attention_mask = encoder_extended_attention_mask.to(dtype=self.dtype)  # fp16 compatibility
+#         encoder_extended_attention_mask = (1.0 - encoder_extended_attention_mask) * torch.finfo(self.dtype).min
 
-    def invert_attention_mask(self, encoder_attention_mask: Tensor) -> Tensor:
-        """
-        Invert an attention mask (e.g., switches 0. and 1.).
+#         return encoder_extended_attention_mask
 
-        Args:
-            encoder_attention_mask (`torch.Tensor`): An attention mask.
+#     @staticmethod
+#     def create_extended_attention_mask_for_decoder(input_shape, attention_mask, device=None):
+#         if device is not None:
+#             warnings.warn(
+#                 "The `device` argument is deprecated and will be removed in v5 of Transformers.", FutureWarning
+#             )
+#         else:
+#             device = attention_mask.device
+#         batch_size, seq_length = input_shape
+#         seq_ids = torch.arange(seq_length, device=device)
+#         causal_mask = seq_ids[None, None, :].repeat(batch_size, seq_length, 1) <= seq_ids[None, :, None]
+#         # in case past_key_values are used we need to add a prefix ones mask to the causal mask
+#         # causal and attention masks must have same type with pytorch version < 1.3
+#         causal_mask = causal_mask.to(attention_mask.dtype)
 
-        Returns:
-            `torch.Tensor`: The inverted attention mask.
-        """
-        if encoder_attention_mask.dim() == 3:
-            encoder_extended_attention_mask = encoder_attention_mask[:, None, :, :]
-        if encoder_attention_mask.dim() == 2:
-            encoder_extended_attention_mask = encoder_attention_mask[:, None, None, :]
-        # T5 has a mask that can compare sequence ids, we can simulate this here with this transposition
-        # Cf. https://github.com/tensorflow/mesh/blob/8d2465e9bc93129b913b5ccc6a59aa97abd96ec6/mesh_tensorflow
-        # /transformer/transformer_layers.py#L270
-        # encoder_extended_attention_mask = (encoder_extended_attention_mask ==
-        # encoder_extended_attention_mask.transpose(-1, -2))
-        encoder_extended_attention_mask = encoder_extended_attention_mask.to(dtype=self.dtype)  # fp16 compatibility
-        encoder_extended_attention_mask = (1.0 - encoder_extended_attention_mask) * torch.finfo(self.dtype).min
+#         if causal_mask.shape[1] < attention_mask.shape[1]:
+#             prefix_seq_len = attention_mask.shape[1] - causal_mask.shape[1]
+#             causal_mask = torch.cat(
+#                 [
+#                     torch.ones((batch_size, seq_length, prefix_seq_len), device=device, dtype=causal_mask.dtype),
+#                     causal_mask,
+#                 ],
+#                 axis=-1,
+#             )
 
-        return encoder_extended_attention_mask
+#         extended_attention_mask = causal_mask[:, None, :, :] * attention_mask[:, None, None, :]
+#         return extended_attention_mask
 
-    @staticmethod
-    def create_extended_attention_mask_for_decoder(input_shape, attention_mask, device=None):
-        if device is not None:
-            warnings.warn(
-                "The `device` argument is deprecated and will be removed in v5 of Transformers.", FutureWarning
-            )
-        else:
-            device = attention_mask.device
-        batch_size, seq_length = input_shape
-        seq_ids = torch.arange(seq_length, device=device)
-        causal_mask = seq_ids[None, None, :].repeat(batch_size, seq_length, 1) <= seq_ids[None, :, None]
-        # in case past_key_values are used we need to add a prefix ones mask to the causal mask
-        # causal and attention masks must have same type with pytorch version < 1.3
-        causal_mask = causal_mask.to(attention_mask.dtype)
+#     def get_extended_attention_mask(
+#         self, attention_mask: Tensor, input_shape: Tuple[int], device: torch.device = None, dtype: torch.float = None
+#     ) -> Tensor:
+#         """
+#         Makes broadcastable attention and causal masks so that future and masked tokens are ignored.
 
-        if causal_mask.shape[1] < attention_mask.shape[1]:
-            prefix_seq_len = attention_mask.shape[1] - causal_mask.shape[1]
-            causal_mask = torch.cat(
-                [
-                    torch.ones((batch_size, seq_length, prefix_seq_len), device=device, dtype=causal_mask.dtype),
-                    causal_mask,
-                ],
-                axis=-1,
-            )
+#         Arguments:
+#             attention_mask (`torch.Tensor`):
+#                 Mask with ones indicating tokens to attend to, zeros for tokens to ignore.
+#             input_shape (`Tuple[int]`):
+#                 The shape of the input to the model.
 
-        extended_attention_mask = causal_mask[:, None, :, :] * attention_mask[:, None, None, :]
-        return extended_attention_mask
+#         Returns:
+#             `torch.Tensor` The extended attention mask, with a the same dtype as `attention_mask.dtype`.
+#         """
+#         if dtype is None:
+#             dtype = self.dtype
 
-    def get_extended_attention_mask(
-        self, attention_mask: Tensor, input_shape: Tuple[int], device: torch.device = None, dtype: torch.float = None
-    ) -> Tensor:
-        """
-        Makes broadcastable attention and causal masks so that future and masked tokens are ignored.
+#         if not (attention_mask.dim() == 2 and self.config.is_decoder):
+#             # show warning only if it won't be shown in `create_extended_attention_mask_for_decoder`
+#             if device is not None:
+#                 warnings.warn(
+#                     "The `device` argument is deprecated and will be removed in v5 of Transformers.", FutureWarning
+#                 )
+#         # We can provide a self-attention mask of dimensions [batch_size, from_seq_length, to_seq_length]
+#         # ourselves in which case we just need to make it broadcastable to all heads.
+#         if attention_mask.dim() == 3:
+#             extended_attention_mask = attention_mask[:, None, :, :]
+#         elif attention_mask.dim() == 2:
+#             # Provided a padding mask of dimensions [batch_size, seq_length]
+#             # - if the model is a decoder, apply a causal mask in addition to the padding mask
+#             # - if the model is an encoder, make the mask broadcastable to [batch_size, num_heads, seq_length, seq_length]
+#             if self.config.is_decoder:
+#                 extended_attention_mask = ModuleUtilsMixin.create_extended_attention_mask_for_decoder(
+#                     input_shape, attention_mask, device
+#                 )
+#             else:
+#                 extended_attention_mask = attention_mask[:, None, None, :]
+#         else:
+#             raise ValueError(
+#                 f"Wrong shape for input_ids (shape {input_shape}) or attention_mask (shape {attention_mask.shape})"
+#             )
 
-        Arguments:
-            attention_mask (`torch.Tensor`):
-                Mask with ones indicating tokens to attend to, zeros for tokens to ignore.
-            input_shape (`Tuple[int]`):
-                The shape of the input to the model.
+#         # Since attention_mask is 1.0 for positions we want to attend and 0.0 for
+#         # masked positions, this operation will create a tensor which is 0.0 for
+#         # positions we want to attend and the dtype's smallest value for masked positions.
+#         # Since we are adding it to the raw scores before the softmax, this is
+#         # effectively the same as removing these entirely.
+#         extended_attention_mask = extended_attention_mask.to(dtype=dtype)  # fp16 compatibility
+#         extended_attention_mask = (1.0 - extended_attention_mask) * torch.finfo(dtype).min
+#         return extended_attention_mask
 
-        Returns:
-            `torch.Tensor` The extended attention mask, with a the same dtype as `attention_mask.dtype`.
-        """
-        if dtype is None:
-            dtype = self.dtype
+#     def get_head_mask(
+#         self, head_mask: Optional[Tensor], num_hidden_layers: int, is_attention_chunked: bool = False
+#     ) -> Tensor:
+#         """
+#         Prepare the head mask if needed.
 
-        if not (attention_mask.dim() == 2 and self.config.is_decoder):
-            # show warning only if it won't be shown in `create_extended_attention_mask_for_decoder`
-            if device is not None:
-                warnings.warn(
-                    "The `device` argument is deprecated and will be removed in v5 of Transformers.", FutureWarning
-                )
-        # We can provide a self-attention mask of dimensions [batch_size, from_seq_length, to_seq_length]
-        # ourselves in which case we just need to make it broadcastable to all heads.
-        if attention_mask.dim() == 3:
-            extended_attention_mask = attention_mask[:, None, :, :]
-        elif attention_mask.dim() == 2:
-            # Provided a padding mask of dimensions [batch_size, seq_length]
-            # - if the model is a decoder, apply a causal mask in addition to the padding mask
-            # - if the model is an encoder, make the mask broadcastable to [batch_size, num_heads, seq_length, seq_length]
-            if self.config.is_decoder:
-                extended_attention_mask = ModuleUtilsMixin.create_extended_attention_mask_for_decoder(
-                    input_shape, attention_mask, device
-                )
-            else:
-                extended_attention_mask = attention_mask[:, None, None, :]
-        else:
-            raise ValueError(
-                f"Wrong shape for input_ids (shape {input_shape}) or attention_mask (shape {attention_mask.shape})"
-            )
+#         Args:
+#             head_mask (`torch.Tensor` with shape `[num_heads]` or `[num_hidden_layers x num_heads]`, *optional*):
+#                 The mask indicating if we should keep the heads or not (1.0 for keep, 0.0 for discard).
+#             num_hidden_layers (`int`):
+#                 The number of hidden layers in the model.
+#             is_attention_chunked (`bool`, *optional*, defaults to `False`):
+#                 Whether or not the attentions scores are computed by chunks or not.
 
-        # Since attention_mask is 1.0 for positions we want to attend and 0.0 for
-        # masked positions, this operation will create a tensor which is 0.0 for
-        # positions we want to attend and the dtype's smallest value for masked positions.
-        # Since we are adding it to the raw scores before the softmax, this is
-        # effectively the same as removing these entirely.
-        extended_attention_mask = extended_attention_mask.to(dtype=dtype)  # fp16 compatibility
-        extended_attention_mask = (1.0 - extended_attention_mask) * torch.finfo(dtype).min
-        return extended_attention_mask
+#         Returns:
+#             `torch.Tensor` with shape `[num_hidden_layers x batch x num_heads x seq_length x seq_length]` or list with
+#             `[None]` for each layer.
+#         """
+#         if head_mask is not None:
+#             head_mask = self._convert_head_mask_to_5d(head_mask, num_hidden_layers)
+#             if is_attention_chunked is True:
+#                 head_mask = head_mask.unsqueeze(-1)
+#         else:
+#             head_mask = [None] * num_hidden_layers
 
-    def get_head_mask(
-        self, head_mask: Optional[Tensor], num_hidden_layers: int, is_attention_chunked: bool = False
-    ) -> Tensor:
-        """
-        Prepare the head mask if needed.
+#         return head_mask
 
-        Args:
-            head_mask (`torch.Tensor` with shape `[num_heads]` or `[num_hidden_layers x num_heads]`, *optional*):
-                The mask indicating if we should keep the heads or not (1.0 for keep, 0.0 for discard).
-            num_hidden_layers (`int`):
-                The number of hidden layers in the model.
-            is_attention_chunked (`bool`, *optional*, defaults to `False`):
-                Whether or not the attentions scores are computed by chunks or not.
+#     def _convert_head_mask_to_5d(self, head_mask, num_hidden_layers):
+#         """-> [num_hidden_layers x batch x num_heads x seq_length x seq_length]"""
+#         if head_mask.dim() == 1:
+#             head_mask = head_mask.unsqueeze(0).unsqueeze(0).unsqueeze(-1).unsqueeze(-1)
+#             head_mask = head_mask.expand(num_hidden_layers, -1, -1, -1, -1)
+#         elif head_mask.dim() == 2:
+#             head_mask = head_mask.unsqueeze(1).unsqueeze(-1).unsqueeze(-1)  # We can specify head_mask for each layer
+#         assert head_mask.dim() == 5, f"head_mask.dim != 5, instead {head_mask.dim()}"
+#         head_mask = head_mask.to(dtype=self.dtype)  # switch to float if need + fp16 compatibility
+#         return head_mask
 
-        Returns:
-            `torch.Tensor` with shape `[num_hidden_layers x batch x num_heads x seq_length x seq_length]` or list with
-            `[None]` for each layer.
-        """
-        if head_mask is not None:
-            head_mask = self._convert_head_mask_to_5d(head_mask, num_hidden_layers)
-            if is_attention_chunked is True:
-                head_mask = head_mask.unsqueeze(-1)
-        else:
-            head_mask = [None] * num_hidden_layers
+#     def num_parameters(self, only_trainable: bool = False, exclude_embeddings: bool = False) -> int:
+#         """
+#         Get number of (optionally, trainable or non-embeddings) parameters in the module.
 
-        return head_mask
+#         Args:
+#             only_trainable (`bool`, *optional*, defaults to `False`):
+#                 Whether or not to return only the number of trainable parameters
 
-    def _convert_head_mask_to_5d(self, head_mask, num_hidden_layers):
-        """-> [num_hidden_layers x batch x num_heads x seq_length x seq_length]"""
-        if head_mask.dim() == 1:
-            head_mask = head_mask.unsqueeze(0).unsqueeze(0).unsqueeze(-1).unsqueeze(-1)
-            head_mask = head_mask.expand(num_hidden_layers, -1, -1, -1, -1)
-        elif head_mask.dim() == 2:
-            head_mask = head_mask.unsqueeze(1).unsqueeze(-1).unsqueeze(-1)  # We can specify head_mask for each layer
-        assert head_mask.dim() == 5, f"head_mask.dim != 5, instead {head_mask.dim()}"
-        head_mask = head_mask.to(dtype=self.dtype)  # switch to float if need + fp16 compatibility
-        return head_mask
+#             exclude_embeddings (`bool`, *optional*, defaults to `False`):
+#                 Whether or not to return only the number of non-embeddings parameters
 
-    def num_parameters(self, only_trainable: bool = False, exclude_embeddings: bool = False) -> int:
-        """
-        Get number of (optionally, trainable or non-embeddings) parameters in the module.
+#         Returns:
+#             `int`: The number of parameters.
+#         """
 
-        Args:
-            only_trainable (`bool`, *optional*, defaults to `False`):
-                Whether or not to return only the number of trainable parameters
+#         if exclude_embeddings:
+#             embedding_param_names = [
+#                 f"{name}.weight" for name, module_type in self.named_modules() if isinstance(module_type, nn.Embedding)
+#             ]
+#             non_embedding_parameters = [
+#                 parameter for name, parameter in self.named_parameters() if name not in embedding_param_names
+#             ]
+#             return sum(p.numel() for p in non_embedding_parameters if p.requires_grad or not only_trainable)
+#         else:
+#             return sum(p.numel() for p in self.parameters() if p.requires_grad or not only_trainable)
 
-            exclude_embeddings (`bool`, *optional*, defaults to `False`):
-                Whether or not to return only the number of non-embeddings parameters
+#     def estimate_tokens(self, input_dict: Dict[str, Union[torch.Tensor, Any]]) -> int:
+#         """
+#         Helper function to estimate the total number of tokens from the model inputs.
 
-        Returns:
-            `int`: The number of parameters.
-        """
+#         Args:
+#             inputs (`dict`): The model inputs.
 
-        if exclude_embeddings:
-            embedding_param_names = [
-                f"{name}.weight" for name, module_type in self.named_modules() if isinstance(module_type, nn.Embedding)
-            ]
-            non_embedding_parameters = [
-                parameter for name, parameter in self.named_parameters() if name not in embedding_param_names
-            ]
-            return sum(p.numel() for p in non_embedding_parameters if p.requires_grad or not only_trainable)
-        else:
-            return sum(p.numel() for p in self.parameters() if p.requires_grad or not only_trainable)
+#         Returns:
+#             `int`: The total number of tokens.
+#         """
+#         if not hasattr(self, "warnings_issued"):
+#             self.warnings_issued = {}
+#         if self.main_input_name in input_dict:
+#             return input_dict[self.main_input_name].numel()
+#         elif "estimate_tokens" not in self.warnings_issued:
+#             logger.warning(
+#                 "Could not estimate the number of tokens of the input, floating-point operations will not be computed"
+#             )
+#             self.warnings_issued["estimate_tokens"] = True
+#         return 0
 
-    def estimate_tokens(self, input_dict: Dict[str, Union[torch.Tensor, Any]]) -> int:
-        """
-        Helper function to estimate the total number of tokens from the model inputs.
+#     def floating_point_ops(
+#         self, input_dict: Dict[str, Union[torch.Tensor, Any]], exclude_embeddings: bool = True
+#     ) -> int:
+#         """
+#         Get number of (optionally, non-embeddings) floating-point operations for the forward and backward passes of a
+#         batch with this transformer model. Default approximation neglects the quadratic dependency on the number of
+#         tokens (valid if `12 * d_model << sequence_length`) as laid out in [this
+#         paper](https://arxiv.org/pdf/2001.08361.pdf) section 2.1. Should be overridden for transformers with parameter
+#         re-use e.g. Albert or Universal Transformers, or if doing long-range modeling with very high sequence lengths.
 
-        Args:
-            inputs (`dict`): The model inputs.
+#         Args:
+#             batch_size (`int`):
+#                 The batch size for the forward pass.
 
-        Returns:
-            `int`: The total number of tokens.
-        """
-        if not hasattr(self, "warnings_issued"):
-            self.warnings_issued = {}
-        if self.main_input_name in input_dict:
-            return input_dict[self.main_input_name].numel()
-        elif "estimate_tokens" not in self.warnings_issued:
-            logger.warning(
-                "Could not estimate the number of tokens of the input, floating-point operations will not be computed"
-            )
-            self.warnings_issued["estimate_tokens"] = True
-        return 0
+#             sequence_length (`int`):
+#                 The number of tokens in each line of the batch.
 
-    def floating_point_ops(
-        self, input_dict: Dict[str, Union[torch.Tensor, Any]], exclude_embeddings: bool = True
-    ) -> int:
-        """
-        Get number of (optionally, non-embeddings) floating-point operations for the forward and backward passes of a
-        batch with this transformer model. Default approximation neglects the quadratic dependency on the number of
-        tokens (valid if `12 * d_model << sequence_length`) as laid out in [this
-        paper](https://arxiv.org/pdf/2001.08361.pdf) section 2.1. Should be overridden for transformers with parameter
-        re-use e.g. Albert or Universal Transformers, or if doing long-range modeling with very high sequence lengths.
+#             exclude_embeddings (`bool`, *optional*, defaults to `True`):
+#                 Whether or not to count embedding and softmax operations.
 
-        Args:
-            batch_size (`int`):
-                The batch size for the forward pass.
+#         Returns:
+#             `int`: The number of floating-point operations.
+#         """
 
-            sequence_length (`int`):
-                The number of tokens in each line of the batch.
-
-            exclude_embeddings (`bool`, *optional*, defaults to `True`):
-                Whether or not to count embedding and softmax operations.
-
-        Returns:
-            `int`: The number of floating-point operations.
-        """
-
-        return 6 * self.estimate_tokens(input_dict) * self.num_parameters(exclude_embeddings=exclude_embeddings)
+#         return 6 * self.estimate_tokens(input_dict) * self.num_parameters(exclude_embeddings=exclude_embeddings)
 
 
-class PreTrainedModel(nn.Module, ModuleUtilsMixin):
+class PreTrainedModel(nn.Module):
     r"""
     Base class for all models.
 

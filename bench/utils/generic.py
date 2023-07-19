@@ -16,133 +16,12 @@ Generic utilities
 """
 
 import inspect
-import tempfile
-from collections import OrderedDict, UserDict
+from collections import OrderedDict
 from collections.abc import MutableMapping
-from contextlib import ExitStack, contextmanager
+from contextlib import ExitStack
 from dataclasses import fields
 from enum import Enum
 from typing import Any, ContextManager, List, Tuple
-
-import numpy as np
-
-#from .import_utils import is_torch_available, is_torch_fx_proxy
-
-# if is_flax_available():
-#     import jax.numpy as jnp
-
-
-class cached_property(property):
-    """
-    Descriptor that mimics @property but caches output in member variable.
-
-    From tensorflow_datasets
-
-    Built-in in functools from Python 3.8.
-    """
-
-    def __get__(self, obj, objtype=None):
-        # See docs.python.org/3/howto/descriptor.html#properties
-        if obj is None:
-            return self
-        if self.fget is None:
-            raise AttributeError("unreadable attribute")
-        attr = "__cached_" + self.fget.__name__
-        cached = getattr(obj, attr, None)
-        if cached is None:
-            cached = self.fget(obj)
-            setattr(obj, attr, cached)
-        return cached
-
-
-# vendored from distutils.util
-def strtobool(val):
-    """Convert a string representation of truth to true (1) or false (0).
-
-    True values are 'y', 'yes', 't', 'true', 'on', and '1'; false values are 'n', 'no', 'f', 'false', 'off', and '0'.
-    Raises ValueError if 'val' is anything else.
-    """
-    val = val.lower()
-    if val in {"y", "yes", "t", "true", "on", "1"}:
-        return 1
-    if val in {"n", "no", "f", "false", "off", "0"}:
-        return 0
-    raise ValueError(f"invalid truth value {val!r}")
-
-
-def is_tensor(x):
-    """
-    Tests if `x` is a `torch.Tensor`, `tf.Tensor`, `jaxlib.xla_extension.DeviceArray` or `np.ndarray`.
-    """
-    if is_torch_fx_proxy(x):
-        return True
-    if is_torch_available():
-        import torch
-
-        if isinstance(x, torch.Tensor):
-            return True
-    if is_tf_available():
-        import tensorflow as tf
-
-        if isinstance(x, tf.Tensor):
-            return True
-
-    if is_flax_available():
-        import jax.numpy as jnp
-        from jax.core import Tracer
-
-        if isinstance(x, (jnp.ndarray, Tracer)):
-            return True
-
-    return isinstance(x, np.ndarray)
-
-
-# def _is_numpy(x):
-#     return isinstance(x, np.ndarray)
-
-
-# def is_numpy_array(x):
-#     """
-#     Tests if `x` is a numpy array or not.
-#     """
-#     return _is_numpy(x)
-
-
-def _is_torch(x):
-    import torch
-
-    return isinstance(x, torch.Tensor)
-
-
-def is_torch_tensor(x):
-    """
-    Tests if `x` is a torch tensor or not. Safe to call even if torch is not installed.
-    """
-    return False if not is_torch_available() else _is_torch(x)
-
-
-def _is_torch_device(x):
-    import torch
-
-    return isinstance(x, torch.device)
-
-
-def is_torch_device(x):
-    """
-    Tests if `x` is a torch device or not. Safe to call even if torch is not installed.
-    """
-    return False if not is_torch_available() else _is_torch_device(x)
-
-
-def _is_torch_dtype(x):
-    import torch
-
-    if isinstance(x, str):
-        if hasattr(torch, x):
-            x = getattr(torch, x)
-        else:
-            return False
-    return isinstance(x, torch.dtype)
 
 
 class ModelOutput(OrderedDict):
@@ -259,29 +138,6 @@ class ExplicitEnum(str, Enum):
         raise ValueError(
             f"{value} is not a valid {cls.__name__}, please select one of {list(cls._value2member_map_.keys())}"
         )
-
-
-class PaddingStrategy(ExplicitEnum):
-    """
-    Possible values for the `padding` argument in [`PreTrainedTokenizerBase.__call__`]. Useful for tab-completion in an
-    IDE.
-    """
-
-    LONGEST = "longest"
-    MAX_LENGTH = "max_length"
-    DO_NOT_PAD = "do_not_pad"
-
-
-class TensorType(ExplicitEnum):
-    """
-    Possible values for the `return_tensors` argument in [`PreTrainedTokenizerBase.__call__`]. Useful for
-    tab-completion in an IDE.
-    """
-
-    PYTORCH = "pt"
-    TENSORFLOW = "tf"
-    NUMPY = "np"
-    JAX = "jax"
 
 
 class ContextManagers:
