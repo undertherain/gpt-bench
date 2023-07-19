@@ -79,10 +79,6 @@ All modification should be contained within `set_environment` and `set_model_and
 
 ## Reporting changes:
 
-Submit modified code along with results. 
-
-For questions contact RIKEN CCS HPAIS team.
-
 Submit modified code along with results
 
 For questions contact RIKEN CCS [HPAIS Team](https://www.r-ccs.riken.jp/en/research/labs/hpaisrt/)
