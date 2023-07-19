@@ -41,8 +41,6 @@ If a combination of several numeric formats is used, e.g. FP32 and accumulation 
 Device can be any string that can be interpreted in `torch.to(device)` call.
 
 
-todo: explicitly state that test runs can't be counted
-
 # Debugging
 
 Additionally, for debugging purpose, the fillowing options can be specified to make model or input smaller:
