@@ -38,7 +38,7 @@ def set_opimizer(net):
     ]
     optimizer = torch.optim.AdamW(
         optimizer_grouped_parameters,
-        lr=0.0001,
+        lr=0.00001,
         eps=1e-06,
         weight_decay=0.01,
         betas=(0.9, 0.999))

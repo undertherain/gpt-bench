@@ -1,7 +1,7 @@
 # Large Language Modeling Benchmark
 
 This benchmark measures throughput of a causal language model training in tokens per second.
-The model is implemented following LLaMa architecture (e.g. using rotary embeddings) but parameterized to contain 1.4 buiillion paramters, similarly to GPT-2 (1.5B) or GPT-J (6B).
+The model is implemented following LLaMa architecture (e.g. using rotary embeddings) but parameterized to contain 1.4 buiillion paramters, similarly to GPT-2 XL (1.5B).
 The model definition is based on the HuggingFace transforemrs library code, stripped of most of external dependencies.
 
 # Correctness
@@ -44,13 +44,16 @@ We realize that novel harware can require specific modification to benchmark cod
 
 ## What can not be changed:
 
- - model definition should stay as it is
- - optimizer should be `AdamW` imported from `torch.optim` module
+ - the model should be run from Python interpreter.
+ - model definition should stay as it is.
+ - optimizer should be `AdamW` imported from `torch.optim` module.
 
 ## What can be changed:
 
 model can be post-processed after being instanciated in any way that 
 - preserves original fuctionality
-- allows model to be trained in the same training loop
+- allows model to be trained in the same training loop (i.e. opimizer.step being called from Python interpreter)
 - done withing the same script
+
+any additional set-up steps to PyTorch framework etc. E.g. `torch.backends.my_backend.enabled = True`
 
