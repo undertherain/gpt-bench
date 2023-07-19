@@ -15,8 +15,6 @@ import inspect
 from typing import Callable, List, Optional, Set, Tuple, Union
 
 import torch
-from packaging import version
-from safetensors.torch import storage_ptr, storage_size
 from torch import nn
 
 import logging
@@ -25,13 +23,6 @@ import logging
 ALL_LAYERNORM_LAYERS = [nn.LayerNorm]
 
 logger = logging.getLogger(__name__)
-
-parsed_torch_version_base = version.parse(version.parse(torch.__version__).base_version)
-
-is_torch_greater_or_equal_than_2_0 = parsed_torch_version_base >= version.parse("2.0")
-is_torch_greater_or_equal_than_1_12 = parsed_torch_version_base >= version.parse("1.12")
-is_torch_greater_or_equal_than_1_11 = parsed_torch_version_base >= version.parse("1.11")
-is_torch_less_than_1_11 = parsed_torch_version_base < version.parse("1.11")
 
 
 def softmax_backward_data(parent, grad_output, output, dim, self):
@@ -42,10 +33,7 @@ def softmax_backward_data(parent, grad_output, output, dim, self):
 
     from torch import _softmax_backward_data
 
-    if is_torch_less_than_1_11:
-        return _softmax_backward_data(grad_output, output, parent.dim, self)
-    else:
-        return _softmax_backward_data(grad_output, output, parent.dim, self.dtype)
+    return _softmax_backward_data(grad_output, output, parent.dim, self.dtype)
 
 
 def prune_linear_layer(layer: nn.Linear, index: torch.LongTensor, dim: int = 0) -> nn.Linear:
@@ -277,11 +265,3 @@ def meshgrid(
     return torch.meshgrid(*tensors, indexing=indexing)
 
 
-def id_tensor_storage(tensor: torch.Tensor) -> Tuple[torch.device, int, int]:
-    """
-    Unique identifier to a tensor storage. Multiple different tensors can share the same underlying storage. For
-    example, "meta" tensors all share the same storage, and thus their identifier will all be equal. This identifier is
-    guaranteed to be unique and constant for this tensor's storage during its lifetime. Two tensor storages with
-    non-overlapping lifetimes may have the same id.
-    """
-    return tensor.device, storage_ptr(tensor), storage_size(tensor)
