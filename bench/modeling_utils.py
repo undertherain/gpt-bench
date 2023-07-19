@@ -16,7 +16,6 @@
 import logging
 import os
 import warnings
-from contextlib import contextmanager
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import torch
@@ -28,18 +27,12 @@ from .pytorch_utils import (Conv1D, apply_chunking_to_forward,  # noqa: F401
                             id_tensor_storage, prune_conv1d_layer, prune_layer,
                             prune_linear_layer)
 
-# from .utils.import_utils import ENV_VARS_TRUE_VALUES
-
-XLA_USE_BF16 = os.environ.get("XLA_USE_BF16", "0").upper()
-XLA_DOWNCAST_BF16 = os.environ.get("XLA_DOWNCAST_BF16", "0").upper()
-
 logger = logging.getLogger(__name__)
 
 
 _init_weights = True
 
 
-@contextmanager
 def no_init_weights(_enable=True):
     """
     Context manager to globally disable weight initialization to speed up loading large models.

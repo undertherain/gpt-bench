@@ -97,15 +97,15 @@ def is_tensor(x):
     return isinstance(x, np.ndarray)
 
 
-def _is_numpy(x):
-    return isinstance(x, np.ndarray)
+# def _is_numpy(x):
+#     return isinstance(x, np.ndarray)
 
 
-def is_numpy_array(x):
-    """
-    Tests if `x` is a numpy array or not.
-    """
-    return _is_numpy(x)
+# def is_numpy_array(x):
+#     """
+#     Tests if `x` is a numpy array or not.
+#     """
+#     return _is_numpy(x)
 
 
 def _is_torch(x):
@@ -151,18 +151,6 @@ def is_torch_dtype(x):
     """
     return False if not is_torch_available() else _is_torch_dtype(x)
 
-
-def _is_tensorflow(x):
-    import tensorflow as tf
-
-    return isinstance(x, tf.Tensor)
-
-
-def is_tf_tensor(x):
-    """
-    Tests if `x` is a tensorflow tensor or not. Safe to call even if tensorflow is not installed.
-    """
-    return False if not is_tf_available() else _is_tensorflow(x)
 
 
 def _is_tf_symbolic_tensor(x):
