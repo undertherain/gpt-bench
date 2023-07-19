@@ -1810,26 +1810,3 @@ def unwrap_model(model: nn.Module) -> nn.Module:
         return unwrap_model(model.module)
     else:
         return model
-
-
-def expand_device_map(device_map, param_names):
-    """
-    Expand a device map to return the correspondance parameter name to device.
-    """
-    new_device_map = {}
-    for module, device in device_map.items():
-        new_device_map.update({p: device for p in param_names if p == module or p.startswith(f"{module}.")})
-    return new_device_map
-
-
-def get_disk_only_shard_files(device_map, sharded_metadata):
-    """
-    Returns the list of shard files containing only weights offloaded to disk.
-    """
-    files_content = collections.defaultdict(list)
-    for weight_name, filename in sharded_metadata["weight_map"].items():
-        while len(weight_name) > 0 and weight_name not in device_map:
-            weight_name = ".".join(weight_name.split(".")[:-1])
-        files_content[filename].append(device_map[weight_name])
-
-    return [fname for fname, devices in files_content.items() if set(devices) == {"disk"}]
