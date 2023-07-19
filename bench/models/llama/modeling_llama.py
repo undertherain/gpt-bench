@@ -34,10 +34,6 @@ from ...modeling_outputs import (BaseModelOutputWithPast,
 from ...modeling_utils import PreTrainedModel
 from .configuration_llama import LlamaConfig
 
-#from ...utils import (add_start_docstrings,
-                      #add_start_docstrings_to_model_forward, logging,
-                      #replace_return_docstrings)
-
 logger = logging.getLogger(__name__)
 
 _CONFIG_FOR_DOC = "LlamaConfig"
