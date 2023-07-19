@@ -24,15 +24,6 @@ import re
 import warnings
 from typing import Any, Dict, List, Optional, Tuple, Union
 
-#from . import __version__
-#from .dynamic_module_utils import custom_object_save
-#from .utils import (CONFIG_NAME, PushToHubMixin, add_model_info_to_auto_map,
-#                    cached_file, copy_func, download_url, extract_commit_hash,
- #                   is_remote_url, is_torch_available, logging)
-
-#from packaging import version
-
-
 logger = logging.getLogger(__name__)
 
 _re_configuration_file = re.compile(r"config\.(.*)\.json")
@@ -1007,10 +998,3 @@ def get_configuration_file(configuration_files: List[str]) -> str:
     #         break
 
     return configuration_file
-
-
-# PretrainedConfig.push_to_hub = copy_func(PretrainedConfig.push_to_hub)
-# if PretrainedConfig.push_to_hub.__doc__ is not None:
-#     PretrainedConfig.push_to_hub.__doc__ = PretrainedConfig.push_to_hub.__doc__.format(
-#         object="config", object_class="AutoConfig", object_files="configuration file"
-#     )
