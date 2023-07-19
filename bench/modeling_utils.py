@@ -446,67 +446,6 @@ def set_initialized_submodules(model, state_dict_keys):
             module._is_hf_initialized = True
 
 
-# def _load_state_dict_into_model(model_to_load, state_dict, start_prefix):
-#     # Convert old format to new format if needed from a PyTorch state_dict
-#     old_keys = []
-#     new_keys = []
-#     for key in state_dict.keys():
-#         new_key = None
-#         if "gamma" in key:
-#             new_key = key.replace("gamma", "weight")
-#         if "beta" in key:
-#             new_key = key.replace("beta", "bias")
-#         if new_key:
-#             old_keys.append(key)
-#             new_keys.append(new_key)
-#     for old_key, new_key in zip(old_keys, new_keys):
-#         state_dict[new_key] = state_dict.pop(old_key)
-
-#     # copy state_dict so _load_from_state_dict can modify it
-#     metadata = getattr(state_dict, "_metadata", None)
-#     state_dict = state_dict.copy()
-#     if metadata is not None:
-#         state_dict._metadata = metadata
-
-#     error_msgs = []
-
-#     # PyTorch's `_load_from_state_dict` does not copy parameters in a module's descendants
-#     # so we need to apply the function recursively.
-#     def load(module: nn.Module, state_dict, prefix=""):
-#         local_metadata = {} if metadata is None else metadata.get(prefix[:-1], {})
-#         args = (state_dict, prefix, local_metadata, True, [], [], error_msgs)
-#         # Parameters of module and children will start with prefix. We can exit early if there are none in this
-#         # state_dict
-#         if len([key for key in state_dict if key.startswith(prefix)]) > 0:
-#             if is_deepspeed_zero3_enabled():
-#                 import deepspeed
-
-#                 # In sharded models, each shard has only part of the full state_dict, so only gather
-#                 # parameters that are in the current state_dict.
-#                 named_parameters = dict(module.named_parameters(prefix=prefix[:-1], recurse=False))
-#                 params_to_gather = [named_parameters[k] for k in state_dict.keys() if k in named_parameters]
-#                 if len(params_to_gather) > 0:
-#                     # because zero3 puts placeholders in model params, this context
-#                     # manager gathers (unpartitions) the params of the current layer, then loads from
-#                     # the state dict and then re-partitions them again
-#                     with deepspeed.zero.GatheredParameters(params_to_gather, modifier_rank=0):
-#                         if torch.distributed.get_rank() == 0:
-#                             module._load_from_state_dict(*args)
-#             else:
-#                 module._load_from_state_dict(*args)
-
-#         for name, child in module._modules.items():
-#             if child is not None:
-#                 load(child, state_dict, prefix + name + ".")
-
-#     load(model_to_load, state_dict, prefix=start_prefix)
-#     # Delete `state_dict` so it could be collected by GC earlier. Note that `state_dict` is a copy of the argument, so
-#     # it's safe to delete it.
-#     del state_dict
-
-#     return error_msgs
-
-
 def find_submodule_and_param_name(model, long_key, start_prefix):
     """
     A helper util to find the last sub-module and the param/buffer name. If `start_prefix` is supplied it'll be removed
@@ -530,158 +469,158 @@ def find_submodule_and_param_name(model, long_key, start_prefix):
     return submodule, split_key[0]
 
 
-def _move_model_to_meta(model, loaded_state_dict_keys, start_prefix):
-    """
-    Moves `loaded_state_dict_keys` in model to meta device which frees up the memory taken by those params.
+# def _move_model_to_meta(model, loaded_state_dict_keys, start_prefix):
+#     """
+#     Moves `loaded_state_dict_keys` in model to meta device which frees up the memory taken by those params.
 
-    `start_prefix` is used for models which insert their name into model keys, e.g. `bert` in
-    `bert.pooler.dense.weight`
+#     `start_prefix` is used for models which insert their name into model keys, e.g. `bert` in
+#     `bert.pooler.dense.weight`
 
-    """
+#     """
 
-    # dematerialize param storage for keys that are going to be replaced by state_dict, by
-    # putting those on the meta device
-    for k in loaded_state_dict_keys:
-        submodule, param_name = find_submodule_and_param_name(model, k, start_prefix)
-        if submodule is not None:
-            # selectively switch to the meta device only those params/buffers that will
-            # be next replaced from state_dict. This a complex way to do p.to_("meta")
-            # since we have no in-place to_ for tensors.
-            new_val = getattr(submodule, param_name)
-            if isinstance(new_val, torch.nn.Parameter):
-                # isinstance returns False for Params on meta device, so switch after the check
-                new_val = torch.nn.Parameter(new_val.to("meta"))
-            else:
-                new_val = new_val.to("meta")
-            setattr(submodule, param_name, new_val)
+#     # dematerialize param storage for keys that are going to be replaced by state_dict, by
+#     # putting those on the meta device
+#     for k in loaded_state_dict_keys:
+#         submodule, param_name = find_submodule_and_param_name(model, k, start_prefix)
+#         if submodule is not None:
+#             # selectively switch to the meta device only those params/buffers that will
+#             # be next replaced from state_dict. This a complex way to do p.to_("meta")
+#             # since we have no in-place to_ for tensors.
+#             new_val = getattr(submodule, param_name)
+#             if isinstance(new_val, torch.nn.Parameter):
+#                 # isinstance returns False for Params on meta device, so switch after the check
+#                 new_val = torch.nn.Parameter(new_val.to("meta"))
+#             else:
+#                 new_val = new_val.to("meta")
+#             setattr(submodule, param_name, new_val)
 
 
-def _load_state_dict_into_meta_model(
-    model,
-    state_dict,
-    loaded_state_dict_keys,  # left for now but could be removed, see below
-    start_prefix,
-    expected_keys,
-    device_map=None,
-    offload_folder=None,
-    offload_index=None,
-    state_dict_folder=None,
-    state_dict_index=None,
-    dtype=None,
-    is_quantized=False,
-    is_safetensors=False,
-    keep_in_fp32_modules=None,
-):
-    """
-    This is somewhat similar to `_load_state_dict_into_model`, but deals with a model that has some or all of its
-    params on a `meta` device. It replaces the model params with the data from the `state_dict`, while moving the
-    params back to the normal device, but only for `loaded_state_dict_keys`.
+# def _load_state_dict_into_meta_model(
+#     model,
+#     state_dict,
+#     loaded_state_dict_keys,  # left for now but could be removed, see below
+#     start_prefix,
+#     expected_keys,
+#     device_map=None,
+#     offload_folder=None,
+#     offload_index=None,
+#     state_dict_folder=None,
+#     state_dict_index=None,
+#     dtype=None,
+#     is_quantized=False,
+#     is_safetensors=False,
+#     keep_in_fp32_modules=None,
+# ):
+#     """
+#     This is somewhat similar to `_load_state_dict_into_model`, but deals with a model that has some or all of its
+#     params on a `meta` device. It replaces the model params with the data from the `state_dict`, while moving the
+#     params back to the normal device, but only for `loaded_state_dict_keys`.
 
-    `start_prefix` is used for models which insert their name into model keys, e.g. `bert` in
-    `bert.pooler.dense.weight`
+#     `start_prefix` is used for models which insert their name into model keys, e.g. `bert` in
+#     `bert.pooler.dense.weight`
 
-    """
+#     """
 
-    # XXX: remaining features to implement to be fully compatible with _load_state_dict_into_model
-    # - deepspeed zero 3 support
-    # - need to copy metadata if any - see _load_state_dict_into_model
-    # - handling error_msgs - mimicking the error handling in module._load_from_state_dict()
-    # - Is there a situation where some keys aren't in `loaded_state_dict_keys` and in which case
-    #   they won't get loaded.
+#     # XXX: remaining features to implement to be fully compatible with _load_state_dict_into_model
+#     # - deepspeed zero 3 support
+#     # - need to copy metadata if any - see _load_state_dict_into_model
+#     # - handling error_msgs - mimicking the error handling in module._load_from_state_dict()
+#     # - Is there a situation where some keys aren't in `loaded_state_dict_keys` and in which case
+#     #   they won't get loaded.
 
-    if is_quantized:
-        from .utils.bitsandbytes import set_module_quantized_tensor_to_device
+#     if is_quantized:
+#         from .utils.bitsandbytes import set_module_quantized_tensor_to_device
 
-    error_msgs = []
+#     error_msgs = []
 
-    old_keys = []
-    new_keys = []
-    for key in state_dict.keys():
-        new_key = None
-        if "gamma" in key:
-            new_key = key.replace("gamma", "weight")
-        if "beta" in key:
-            new_key = key.replace("beta", "bias")
-        if new_key:
-            old_keys.append(key)
-            new_keys.append(new_key)
-    for old_key, new_key in zip(old_keys, new_keys):
-        state_dict[new_key] = state_dict.pop(old_key)
+#     old_keys = []
+#     new_keys = []
+#     for key in state_dict.keys():
+#         new_key = None
+#         if "gamma" in key:
+#             new_key = key.replace("gamma", "weight")
+#         if "beta" in key:
+#             new_key = key.replace("beta", "bias")
+#         if new_key:
+#             old_keys.append(key)
+#             new_keys.append(new_key)
+#     for old_key, new_key in zip(old_keys, new_keys):
+#         state_dict[new_key] = state_dict.pop(old_key)
 
-    for param_name, param in state_dict.items():
-        # First part of the test is always true as load_state_dict_keys always contains state_dict keys.
-        if param_name not in loaded_state_dict_keys or param_name not in expected_keys:
-            continue
+#     for param_name, param in state_dict.items():
+#         # First part of the test is always true as load_state_dict_keys always contains state_dict keys.
+#         if param_name not in loaded_state_dict_keys or param_name not in expected_keys:
+#             continue
 
-        if param_name.startswith(start_prefix):
-            param_name = param_name[len(start_prefix) :]
+#         if param_name.startswith(start_prefix):
+#             param_name = param_name[len(start_prefix) :]
 
-        module_name = param_name
-        set_module_kwargs = {}
+#         module_name = param_name
+#         set_module_kwargs = {}
 
-        # We convert floating dtypes to the `dtype` passed. We want to keep the buffers/params
-        # in int/uint/bool and not cast them.
-        if dtype is not None and torch.is_floating_point(param):
-            if (
-                keep_in_fp32_modules is not None
-                and any(module_to_keep_in_fp32 in param_name for module_to_keep_in_fp32 in keep_in_fp32_modules)
-                and dtype == torch.float16
-            ):
-                param = param.to(torch.float32)
+#         # We convert floating dtypes to the `dtype` passed. We want to keep the buffers/params
+#         # in int/uint/bool and not cast them.
+#         if dtype is not None and torch.is_floating_point(param):
+#             if (
+#                 keep_in_fp32_modules is not None
+#                 and any(module_to_keep_in_fp32 in param_name for module_to_keep_in_fp32 in keep_in_fp32_modules)
+#                 and dtype == torch.float16
+#             ):
+#                 param = param.to(torch.float32)
 
-                # For backward compatibility with older versions of `accelerate`
-                # TODO: @sgugger replace this check with version check at the next `accelerate` release
-                if "dtype" in list(inspect.signature(set_module_tensor_to_device).parameters):
-                    set_module_kwargs["dtype"] = torch.float32
-            else:
-                param = param.to(dtype)
+#                 # For backward compatibility with older versions of `accelerate`
+#                 # TODO: @sgugger replace this check with version check at the next `accelerate` release
+#                 if "dtype" in list(inspect.signature(set_module_tensor_to_device).parameters):
+#                     set_module_kwargs["dtype"] = torch.float32
+#             else:
+#                 param = param.to(dtype)
 
-        # For compatibility with PyTorch load_state_dict which converts state dict dtype to existing dtype in model
-        if dtype is None:
-            old_param = model
-            splits = param_name.split(".")
-            for split in splits:
-                old_param = getattr(old_param, split)
-                if old_param is None:
-                    break
+#         # For compatibility with PyTorch load_state_dict which converts state dict dtype to existing dtype in model
+#         if dtype is None:
+#             old_param = model
+#             splits = param_name.split(".")
+#             for split in splits:
+#                 old_param = getattr(old_param, split)
+#                 if old_param is None:
+#                     break
 
-            if old_param is not None:
-                param = param.to(old_param.dtype)
+#             if old_param is not None:
+#                 param = param.to(old_param.dtype)
 
-        set_module_kwargs["value"] = param
+#         set_module_kwargs["value"] = param
 
-        if device_map is None:
-            param_device = "cpu"
-        else:
-            # find next higher level module that is defined in device_map:
-            # bert.lm_head.weight -> bert.lm_head -> bert -> ''
-            while len(module_name) > 0 and module_name not in device_map:
-                module_name = ".".join(module_name.split(".")[:-1])
-            if module_name == "" and "" not in device_map:
-                # TODO: group all errors and raise at the end.
-                raise ValueError(f"{param_name} doesn't have any device set.")
-            param_device = device_map[module_name]
+#         if device_map is None:
+#             param_device = "cpu"
+#         else:
+#             # find next higher level module that is defined in device_map:
+#             # bert.lm_head.weight -> bert.lm_head -> bert -> ''
+#             while len(module_name) > 0 and module_name not in device_map:
+#                 module_name = ".".join(module_name.split(".")[:-1])
+#             if module_name == "" and "" not in device_map:
+#                 # TODO: group all errors and raise at the end.
+#                 raise ValueError(f"{param_name} doesn't have any device set.")
+#             param_device = device_map[module_name]
 
-        if param_device == "disk":
-            if not is_safetensors:
-                offload_index = offload_weight(param, param_name, offload_folder, offload_index)
-        elif param_device == "cpu" and state_dict_index is not None:
-            state_dict_index = offload_weight(param, param_name, state_dict_folder, state_dict_index)
-        elif not is_quantized:
-            # For backward compatibility with older versions of `accelerate`
-            set_module_tensor_to_device(model, param_name, param_device, **set_module_kwargs)
-        else:
-            if param.dtype == torch.int8 and param_name.replace("weight", "SCB") in state_dict.keys():
-                fp16_statistics = state_dict[param_name.replace("weight", "SCB")]
-            else:
-                fp16_statistics = None
+#         if param_device == "disk":
+#             if not is_safetensors:
+#                 offload_index = offload_weight(param, param_name, offload_folder, offload_index)
+#         elif param_device == "cpu" and state_dict_index is not None:
+#             state_dict_index = offload_weight(param, param_name, state_dict_folder, state_dict_index)
+#         elif not is_quantized:
+#             # For backward compatibility with older versions of `accelerate`
+#             set_module_tensor_to_device(model, param_name, param_device, **set_module_kwargs)
+#         else:
+#             if param.dtype == torch.int8 and param_name.replace("weight", "SCB") in state_dict.keys():
+#                 fp16_statistics = state_dict[param_name.replace("weight", "SCB")]
+#             else:
+#                 fp16_statistics = None
 
-            if "SCB" not in param_name:
-                set_module_quantized_tensor_to_device(
-                    model, param_name, param_device, value=param, fp16_statistics=fp16_statistics
-                )
+#             if "SCB" not in param_name:
+#                 set_module_quantized_tensor_to_device(
+#                     model, param_name, param_device, value=param, fp16_statistics=fp16_statistics
+#                 )
 
-    return error_msgs, offload_index, state_dict_index
+#     return error_msgs, offload_index, state_dict_index
 
 
 def _add_variant(weights_name: str, variant: Optional[str] = None) -> str:
