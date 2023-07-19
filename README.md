@@ -73,7 +73,8 @@ We realize that novel hardware support can require specific modification to the 
 - Any additional set-up steps to PyTorch framework etc. E.g. `torch.backends.my_backend.enabled = True`
 - New numeric format can be added.
 
-All modification should be contained within `set_environment` and `set_model_and_data` methods (with the exception of when  the API in newer version of pytorch changes).
+All modification should be in principle contained within `set_environment` and `set_model_and_data` methods.
+If you need to modify any other part of code (e.g. PyTorch API changed etc) - please contanct benchmark authors.
 
 ## Reporting changes:
 
