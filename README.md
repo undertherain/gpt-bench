@@ -73,10 +73,7 @@ We realize that novel hardware support can require specific modification to the 
     - Allows the model to be trained in the same training loop (i.e. `opimizer.step` being called from Python interpreter).
     - Done within the same script.
 - Any additional set-up steps to PyTorch framework etc. E.g. `torch.backends.my_backend.enabled = True`
-
-Necessary configuration can be applied to PyTorch framework etc. E.g. calling something like `torch.backends.my_backend.enabled = True`
-
-New numeric format can be added.
+- New numeric format can be added.
 
 All modification should be contained within `set_environment` and `set_model_and_data` methods.
 
