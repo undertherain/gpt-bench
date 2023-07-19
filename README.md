@@ -47,11 +47,11 @@ todo: explicitly state that test runs can't be counted
 
 Additionally, for debugging purpose, the fillowing options can be specified to make model or input smaller:
 
-- --sequence-length
-- --hidden-size
-- --intermediate-size
-- --num-hidden-layers
-- --num-attention-heads
+- `--sequence-length`
+- `--hidden-size`
+- `--intermediate-size`
+- `--num-hidden-layers`
+- `--num-attention-heads`
 
 Changing any of these parameters from their defaults makes benchmark results not valid. 
 Note that changing batch size is the only option to increase or decrease the amount of computation done by the benchmark and have alid results.
@@ -75,7 +75,7 @@ We realize that novel hardware support can require specific modification to the 
 - Any additional set-up steps to PyTorch framework etc. E.g. `torch.backends.my_backend.enabled = True`
 - New numeric format can be added.
 
-All modification should be contained within `set_environment` and `set_model_and_data` methods.
+All modification should be contained within `set_environment` and `set_model_and_data` methods (with the exception of when  the API in newer version of pytorch changes).
 
 ## Reporting changes:
 
