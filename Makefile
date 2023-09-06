@@ -9,8 +9,8 @@ run:
 interactive:
 	docker run \
 	--cap-add SYS_ADMIN \
+	--gpus all \
 	-it torch:stable \
-	--gpus=all \
 	/bin/bash
 
 #deploy:
