@@ -10,6 +10,8 @@ interactive:
 	docker run \
 	--cap-add SYS_ADMIN \
 	--gpus all \
+	-u `id -u`:`id -g` \
+	--mount type=bind,source=./workdir,target=/workdir \
 	-it torch:stable \
 	/bin/bash
 

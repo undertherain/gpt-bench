@@ -74,6 +74,7 @@ RUN git clone https://github.com/NVIDIA/apex && \
     cd .. && \    
     rm -rf apex
 
+RUN pip3 install regex
 
 # RUN pip3 install six numpy wheel setuptools mock
 # RUN pip3 install pydataset
