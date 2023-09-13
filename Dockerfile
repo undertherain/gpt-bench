@@ -76,6 +76,8 @@ RUN git clone https://github.com/NVIDIA/apex && \
 
 RUN pip3 install regex
 
+RUN git clone git@github.com:rioyokotalab/DeepSpeedFugaku.git
+
 # RUN pip3 install six numpy wheel setuptools mock
 # RUN pip3 install pydataset
 # RUN pip3 install py-cpuinfo
