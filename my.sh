@@ -1,12 +1,12 @@
 #export WORLD_SIZE=$(($CPUS_PER_NODE*$NNODES))
-#export MASTER_ADDR=localhost
-#export MASTER_PORT=$((10000 + ($PJM_JOBID % 50000)))
+export MASTER_ADDR=localhost
+export MASTER_PORT=50000
 #export TIMER="timer.30b_pp48_tp6_dp2_pytorch1.13_10itr"
-CHECKPOINT_PATH=../checkpoints/
+CHECKPOINT_PATH=./checkpoints/
 #INPUT_PREFIX=dataset
 #VOCAB_FILE=gpt2-vocab.json
 #MERGE_FILE=gpt2-merges.txt
-DATA_PATH=/home/blackbird/Projects_heavy/performance/LLMs/llm-bench/data
+DATA_PATH=./data
 #TENSORBOARD_ARGS="--tensorboard-dir experiments/tensorboard"
 
 #DATA_PARALLEL_SIZE=2
@@ -24,6 +24,7 @@ DATA_PATH=/home/blackbird/Projects_heavy/performance/LLMs/llm-bench/data
 #export OMP_NUM_THREADS=48
 #export LD_PRELOAD=/local/fcc/inst/other/lib/libtcmalloc.so
 #export OMP_WAIT_POLICY=ACTIVE
+export CUDA_DEVICE_MAX_CONNECTIONS=1
 
 python3 DeepSpeedFugaku/pretrain_gpt.py \
     --num-layers 2 \
@@ -38,8 +39,8 @@ python3 DeepSpeedFugaku/pretrain_gpt.py \
     --save $CHECKPOINT_PATH \
     --load $CHECKPOINT_PATH \
     --data-path $DATA_PATH \
-    --vocab-file /home/blackbird/Projects_heavy/performance/LLMs/llm-bench/data/gpt2-vocab.json \
-    --merge-file /home/blackbird/Projects_heavy/performance/LLMs/llm-bench/data/gpt2-merges.txt \
+    --vocab-file $DATA_PATH/gpt2-vocab.json \
+    --merge-file $DATA_PATH/gpt2-merges.txt \
     --data-impl mmap \
     --split 949,50,1 \
     --distributed-backend gloo \

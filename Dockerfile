@@ -49,6 +49,11 @@ RUN wget https://developer.download.nvidia.com/compute/redist/cudnn/v8.2.4/cudnn
 # && 
 #    apt-get clean
 
+RUN apt-get install -y --no-install-recommends libopenmpi-dev openmpi-common openmpi-bin && \
+    apt-get clean
+
+
+RUN pip3 install --upgrade pip
 RUN pip3 install typing-extensions jinja2 filelock fsspec networkx sympy jupyter
 
 
@@ -64,19 +69,22 @@ RUN git clone --recursive https://github.com/pytorch/pytorch && \
     cd .. && \
     rm -rf pytorch
 
+RUN pip3 install deepspeed regex
 
-RUN pip3 install deepspeed
-RUN pip3 install --upgrade pip
+ENV CXX=g++
 
 RUN git clone https://github.com/NVIDIA/apex && \
     cd apex && \
-    pip install -v --disable-pip-version-check --no-cache-dir --no-build-isolation --config-settings "--build-option=--cpp_ext" --config-settings "--build-option=--cuda_ext" ./ && \
-    cd .. && \    
+    python3 setup.py install --cpp_ext --cuda_ext && \
+    cd .. && \
     rm -rf apex
 
-RUN pip3 install regex
+RUN pip3 install torchvision --no-deps
+RUN pip3 install pillow
+#pip install -v --disable-pip-version-check --no-cache-dir --no-build-isolation --config-settings "--build-option=--cpp_ext" --config-settings "--build-option=--cuda_ext" ./ && \
 
-RUN git clone git@github.com:rioyokotalab/DeepSpeedFugaku.git
+
+#RUN git clone git@github.com:rioyokotalab/DeepSpeedFugaku.git
 
 # RUN pip3 install six numpy wheel setuptools mock
 # RUN pip3 install pydataset
