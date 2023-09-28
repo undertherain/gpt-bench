@@ -1,4 +1,4 @@
-python3 ../DeepSpeedFugaku/tools/preprocess_data.py \
+python3 ../../DeepSpeedFugaku/tools/preprocess_data.py \
     --input corpus.jsonl \
     --output-prefix my-gpt \
     --vocab-file gpt2-vocab.json \

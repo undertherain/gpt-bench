@@ -17,5 +17,5 @@ with open(f"corpus.jsonl", "w") as file_out:
             data = {"text": text}
             file_out.write(json.dumps(data))
             file_out.write("\n")
-        if cnt > 10000:
+        if cnt > 100000:
             break

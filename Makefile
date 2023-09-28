@@ -11,9 +11,11 @@ interactive:
 	--cap-add SYS_ADMIN \
 	-u `id -u`:`id -g` \
 	--gpus all \
+	--shm-size=1g \
 	--mount type=bind,source=./workdir,target=/workdir \
 	-it torch:stable \
 	/bin/bash
+
 
 #deploy:
 #		docker push xxx
