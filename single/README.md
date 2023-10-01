@@ -10,11 +10,6 @@ each with 32 attention heads, embedding size of 3200 and mixing layer of size 64
 
 The model is trained on synthetic sequences, each 256 tokens long.
 
-# Correctness
-
-In order to be able to execute in relatively short time, the benchmark does not check for convergence to a given fidelity metric etc. 
-We expect that all operations are performed correctly in corresponding numeric formats, according to the model definition.
-
 # Dependencies
 
 The benchmark requires Python interpreter verion 3.8 or above.
@@ -32,13 +27,6 @@ python3 -m bench \
     --device=XX
 ```    
 
-Batch size can be set to any integer number in order to accomodate devices with different amounts of memory. The user can report the best throughput achieved under any batch size. 
-
-Precisions can be one of "FP32", "TF32", "FP16", "BF16".
-The user should report all supported precisions along with the achieved throughput number for each precision. 
-If a combination of several numeric formats is used, e.g. FP32 and accumulation is done in FP16 in hardware - the whole run is considrered to be done in a precision with the lowest number of bits.  
-
-Device can be any string that can be interpreted in `torch.to(device)` call.
 
 
 # Debugging
