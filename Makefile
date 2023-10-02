@@ -12,7 +12,7 @@ interactive:
 	-u `id -u`:`id -g` \
 	--gpus all \
 	--shm-size=1g \
-	--mount type=bind,source=./workdir,target=/workdir \
+	--mount type=bind,source=./distributed,target=/workdir \
 	-it torch:stable \
 	/bin/bash
 
