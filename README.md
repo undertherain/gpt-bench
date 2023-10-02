@@ -1,11 +1,6 @@
 # Large Language Modeling Benchmark
 
-This benchmark measures throughput of a causal language model training, measured in tokens per second.
-
-The benchmark comes in two variants: single-node and distributed.
-These two variants are not mutually replaceable, but rather complimentary.
-
-Single node benchmark is designed to have minimal external dependencies, the model is implemented in pure PyTorch. Additionally this version has stricter conditions on what can be modified - the model can only be optimized in post-processing step etc. Refer to [correspondign README file](/single/README.md) for more details.
+This benchmark measures throughput of a causal language model training in tokens per second.
 
 ## Correctness
 
@@ -26,6 +21,12 @@ Batch size can be set to any integer number in order to accomodate devices with 
 
 Device can be any string that can be interpreted in `torch.to(device)` call.
 
+## Sinle-node benchmark
+The benchmark comes in two variants: single-node and distributed.
+These two variants are not mutually replaceable, but rather complimentary.
+
+Single node benchmark is designed to have minimal external dependencies, the model is implemented in pure PyTorch. Additionally this version has stricter conditions on what can be modified - the model can only be optimized in post-processing step etc. Refer to [correspondign README file](/single/README.md) for more details.
+
 ## Distributed benchmark
 
 Distributed version benchmark is formulated as training of 175B parameters GPT-like model. The actual parallelization scheme is not fixed in order to accomodate for different network topologies. The model size is set, however, to be prohibitively large for a typical stand-alone accelerator.
@@ -34,8 +35,10 @@ Reference implementation is based on Megatron-LM codebase and supports "tensor" 
 
 The model should be initialized to correspond to the GPT atchitecture with the following configuration:
 
-## Preparing data
+### Preparing data
 
 Download vocabulary file with `bash download_vocab.sh`
 
 Dump corpus to jsonl format by running `python3 dump_wiki.py` in `data` folder and tokenize by running `preprocess.sh` script.
+
+### Running
