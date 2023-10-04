@@ -37,7 +37,7 @@ GPT_ARGS="
     --micro-batch-size 4 \
     --global-batch-size 16 \
     --lr 0.00015 \
-    --train-iters 500000 \
+    --train-iters 1000 \
     --lr-decay-iters 320000 \
     --lr-decay-style cosine \
     --min-lr 1.0e-5 \
@@ -58,8 +58,8 @@ DATA_ARGS="
 OUTPUT_ARGS="
     --log-interval 100 \
     --save-interval 10000 \
-    --eval-interval 1000 \
-    --eval-iters 10
+    --eval-interval 10000 \
+    --eval-iters 0
 "
 
 torchrun $DISTRIBUTED_ARGS pretrain_gpt.py \

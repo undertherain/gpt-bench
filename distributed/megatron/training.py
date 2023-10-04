@@ -8,26 +8,41 @@ import time
 from datetime import datetime
 
 import torch
-from megatron import (get_args, get_current_global_batch_size,
-                      get_num_microbatches, get_signal_handler,
-                      get_tensorboard_writer, get_timers, is_last_rank,
-                      print_rank_0, print_rank_last, update_num_microbatches)
+from megatron import (
+    get_args,
+    get_current_global_batch_size,
+    get_num_microbatches,
+    get_signal_handler,
+    get_tensorboard_writer,
+    get_timers,
+    is_last_rank,
+    print_rank_0,
+    print_rank_last,
+    update_num_microbatches,
+)
 from megatron.checkpointing import load_checkpoint, save_checkpoint
 from megatron.core import mpu, tensor_parallel
 from megatron.core.enums import ModelType
 from megatron.core.pipeline_parallel import get_forward_backward_func
 from megatron.data.data_samplers import build_pretraining_data_loader
-from megatron.initialize import (initialize_megatron, set_jit_fusion_options,
-                                 write_args_to_tensorboard)
+from megatron.initialize import (
+    initialize_megatron,
+    set_jit_fusion_options,
+    write_args_to_tensorboard,
+)
 from megatron.model import DistributedDataParallel as LocalDDP
 from megatron.model import Float16Module, GPTModel
-from megatron.model.vision.knn_monitor import compute_feature_bank
+
+# from megatron.model.vision.knn_monitor import compute_feature_bank
 from megatron.optimizer import get_megatron_optimizer
 from megatron.optimizer_param_scheduler import OptimizerParamScheduler
 from megatron.perf_monitor import perf_monitor
-from megatron.utils import (calc_params_l2_norm,
-                            check_adlr_autoresume_termination, report_memory,
-                            unwrap_model)
+from megatron.utils import (
+    calc_params_l2_norm,
+    check_adlr_autoresume_termination,
+    report_memory,
+    unwrap_model,
+)
 from torch.nn.parallel.distributed import DistributedDataParallel as torchDDP
 
 # The earliest we can measure the start time.
@@ -147,24 +162,26 @@ def pretrain(train_valid_test_dataset_provider,
                           train_data_iterator, valid_data_iterator,
                           process_non_loss_data_func)
     print_datetime('after training is done')
+    print("=========================================")
+    print("tokens per second =", perf_monitor.get_tokens_per_second())
 
-    if args.do_valid:
-        prefix = 'the end of training for val data'
-        evaluate_and_print_results(prefix, forward_step_func,
-                                   valid_data_iterator, model,
-                                   iteration, process_non_loss_data_func,
-                                   False)
+    # if args.do_valid:
+    #     prefix = 'the end of training for val data'
+    #     evaluate_and_print_results(prefix, forward_step_func,
+    #                                valid_data_iterator, model,
+    #                                iteration, process_non_loss_data_func,
+    #                                False)
 
-    if args.save and iteration != 0:
-        save_checkpoint(iteration, model, optimizer, opt_param_scheduler)
+    # if args.save and iteration != 0:
+    #     save_checkpoint(iteration, model, optimizer, opt_param_scheduler)
 
-    if args.do_test:
-        # Run on test data.
-        prefix = 'the end of training for test data'
-        evaluate_and_print_results(prefix, forward_step_func,
-                                   test_data_iterator, model,
-                                   0, process_non_loss_data_func,
-                                   True)
+    # if args.do_test:
+    #     # Run on test data.
+    #     prefix = 'the end of training for test data'
+    #     evaluate_and_print_results(prefix, forward_step_func,
+    #                                test_data_iterator, model,
+    #                                0, process_non_loss_data_func,
+    #                                True)
 
 
 def update_train_iters(args):
@@ -611,6 +628,7 @@ def training_log(loss_dict, total_loss_dict, learning_rate, iteration,
     if iteration % args.log_interval == 0:
         elapsed_time = timers('interval-time').elapsed(barrier=True)
         elapsed_time_per_iteration = elapsed_time / total_iterations
+        perf_monitor.update_stats(args, elapsed_time, total_iterations)
         if writer:
             if args.log_timers_to_tensorboard:
                 writer.add_scalar('iteration-time',
