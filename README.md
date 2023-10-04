@@ -42,3 +42,5 @@ Download vocabulary file with `bash download_vocab.sh`
 Dump corpus to jsonl format by running `python3 dump_wiki.py` in `data` folder and tokenize by running `preprocess.sh` script.
 
 ### Running
+
+Refer to the 
