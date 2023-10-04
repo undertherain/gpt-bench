@@ -162,8 +162,7 @@ def pretrain(train_valid_test_dataset_provider,
                           train_data_iterator, valid_data_iterator,
                           process_non_loss_data_func)
     print_datetime('after training is done')
-    print("=========================================")
-    print("tokens per second =", perf_monitor.get_tokens_per_second())
+    print_rank_last(f"tokens per second = {perf_monitor.get_tokens_per_second()}")
 
     # if args.do_valid:
     #     prefix = 'the end of training for val data'
