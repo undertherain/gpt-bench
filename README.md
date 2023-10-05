@@ -22,6 +22,7 @@ Batch size can be set to any integer number in order to accomodate devices with 
 Device can be any string that can be interpreted in `torch.to(device)` call.
 
 ## Sinle-node benchmark
+
 The benchmark comes in two variants: single-node and distributed.
 These two variants are not mutually replaceable, but rather complimentary.
 
@@ -33,14 +34,12 @@ Distributed version benchmark is formulated as training of 175B parameters GPT-l
 
 Reference implementation is based on Megatron-LM codebase and supports "tensor" and pipeline parallelizm.
 
-The model should be initialized to correspond to the GPT atchitecture with the following configuration:
+The model should be initialized to correspond to the GPT model according to configuration in the `distributed/run_benchmark.sh` script
 
-### Preparing data
+### Running
 
 Download vocabulary file with `bash download_vocab.sh`
 
 Dump corpus to jsonl format by running `python3 dump_wiki.py` in `data` folder and tokenize by running `preprocess.sh` script.
 
-### Running
-
-Refer to the 
+Modify `distributed/run_benchmark.sh` script to match target hardware and run.
