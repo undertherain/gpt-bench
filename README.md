@@ -40,6 +40,6 @@ The model should be initialized to correspond to the GPT model according to conf
 
 Download vocabulary file with `bash download_vocab.sh`
 
-Dump corpus to jsonl format by running `python3 dump_wiki.py` in `data` folder and tokenize by running `preprocess.sh` script.
+Dump corpus to jsonl format by running `python3 dump_wiki.py` and tokenize by running `preprocess.sh` script.
 
 Modify `distributed/run_benchmark.sh` script to match target hardware and run.
