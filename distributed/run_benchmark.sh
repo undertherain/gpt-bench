@@ -29,11 +29,11 @@ GPT_ARGS="
     --tensor-model-parallel-size 2 \
     --pipeline-model-parallel-size 2 \
     --sequence-parallel \
-    --num-layers 24 \
-    --hidden-size 1024 \
-    --num-attention-heads 16 \
+    --num-layers 64 \
+    --hidden-size 12288 \
+    --num-attention-heads 2048 \
     --seq-length 1024 \
-    --max-position-embeddings 1024 \
+    --max-position-embeddings 2048 \
     --micro-batch-size 4 \
     --global-batch-size 16 \
     --lr 0.00015 \
