@@ -31,8 +31,8 @@ GPT_ARGS="
     --sequence-parallel \
     --num-layers 64 \
     --hidden-size 12288 \
-    --num-attention-heads 2048 \
-    --seq-length 1024 \
+    --num-attention-heads 96 \
+    --seq-length 2048 \
     --max-position-embeddings 2048 \
     --micro-batch-size 4 \
     --global-batch-size 16 \
