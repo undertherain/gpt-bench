@@ -28,12 +28,14 @@ DISTRIBUTED_ARGS="
 GPT_ARGS="
     --tensor-model-parallel-size 2 \
     --pipeline-model-parallel-size 2 \
+    --moe-expert-parallel-size 1 \
+    --num-experts 1 \
     --sequence-parallel \
-    --num-layers 64 \
-    --hidden-size 12288 \
-    --num-attention-heads 96 \
-    --seq-length 2048 \
-    --max-position-embeddings 2048 \
+    --num-layers 16 \
+    --hidden-size 1024 \
+    --num-attention-heads 16 \
+    --seq-length 1024 \
+    --max-position-embeddings 1024 \
     --micro-batch-size 4 \
     --global-batch-size 16 \
     --lr 0.00015 \
@@ -44,7 +46,8 @@ GPT_ARGS="
     --weight-decay 1e-2 \
     --lr-warmup-fraction .01 \
     --clip-grad 1.0 \
-    --fp16
+    --fp16 \
+    --no-gradient-accumulation-fusion
 "
 
 DATA_ARGS="
@@ -62,6 +65,7 @@ OUTPUT_ARGS="
     --eval-iters 0
 "
 
+export PYTHONPATH="$(pwd)/Megatron-DeepSpeed:${PYTHONPATH}"
 torchrun $DISTRIBUTED_ARGS pretrain_gpt.py \
     $GPT_ARGS \
     $DATA_ARGS \
