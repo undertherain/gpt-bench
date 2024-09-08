@@ -2,6 +2,7 @@
 
 # Runs the "345M" parameter model
 
+
 export CUDA_DEVICE_MAX_CONNECTIONS=1
 
 GPUS_PER_NODE=4
@@ -13,6 +14,8 @@ NODE_RANK=0
 WORLD_SIZE=$(($GPUS_PER_NODE*$NNODES))
 
 CHECKPOINT_PATH=./checkpoints
+rm -rf $CHECKPOINT_PATH || true
+
 VOCAB_FILE=./data/gpt2-vocab.json
 MERGE_FILE=./data/gpt2-merges.txt
 DATA_PATH=./data/my-gpt_text_document
@@ -25,18 +28,20 @@ DISTRIBUTED_ARGS="
     --master_port $MASTER_PORT
 "
 
+# --use-flash-attn-triton \
+
 GPT_ARGS="
-    --tensor-model-parallel-size 2 \
-    --pipeline-model-parallel-size 2 \
+    --tensor-model-parallel-size 4 \
+    --pipeline-model-parallel-size 1 \
     --moe-expert-parallel-size 1 \
     --num-experts 1 \
-    --sequence-parallel \
-    --num-layers 16 \
-    --hidden-size 1024 \
-    --num-attention-heads 16 \
-    --seq-length 1024 \
-    --max-position-embeddings 1024 \
-    --micro-batch-size 4 \
+    --expert-interval 1 \
+    --num-layers 32 \
+    --hidden-size 4096 \
+    --num-attention-heads 64 \
+    --seq-length 4096 \
+    --max-position-embeddings 4096 \
+    --micro-batch-size 1 \
     --global-batch-size 16 \
     --lr 0.00015 \
     --train-iters 500 \
